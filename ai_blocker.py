@@ -4,6 +4,12 @@ AI Network Blocker — Kill switch para editores de código con IA.
 Bloquea/desbloquea dominios de IA editando el archivo hosts de Windows.
 Soporte para 10 idiomas con detección automática y selector manual.
 Requiere privilegios de Administrador.
+
+--- EN ---
+AI Network Blocker — Kill switch for AI-powered code editors.
+Blocks/unblocks AI domains by editing the Windows hosts file.
+Supports 10 languages with automatic detection and manual selector.
+Requires Administrator privileges.
 """
 
 import os
@@ -17,12 +23,12 @@ from tkinter import ttk
 import threading
 
 # =====================================================================
-# VERSIÓN
+# VERSIÓN / VERSION
 # =====================================================================
 APP_VERSION = "1.0.1"
 
 # =====================================================================
-# CONFIGURACIÓN DE DOMINIOS A BLOQUEAR
+# CONFIGURACIÓN DE DOMINIOS A BLOQUEAR / BLOCKLIST DOMAIN CONFIGURATION
 # =====================================================================
 BLOCKLIST = {
     "OpenAI": [
@@ -73,21 +79,21 @@ HOSTS_PATH = os.path.join(
 )
 
 # =====================================================================
-# PALETA DE COLORES — Catppuccin Mocha (dark premium)
+# PALETA DE COLORES — Catppuccin Mocha (dark premium) / COLOR PALETTE
 # =====================================================================
-COL_BASE      = "#1E1E2E"   # Fondo principal
-COL_SURFACE0  = "#313244"   # Panel secundario
-COL_SURFACE1  = "#45475A"   # Bordes sutiles
-COL_TEXT      = "#CDD6F4"   # Texto principal
-COL_SUBTEXT   = "#A6ADC8"   # Texto secundario
-COL_RED       = "#F38BA8"   # Rojo suave
-COL_GREEN     = "#A6E3A1"   # Verde suave
-COL_YELLOW    = "#F9E2AF"   # Amarillo
-COL_BLUE      = "#89B4FA"   # Azul accent
-COL_MAUVE     = "#CBA6F7"   # Púrpura accent
+COL_BASE      = "#1E1E2E"   # Fondo principal / Main background
+COL_SURFACE0  = "#313244"   # Panel secundario / Secondary surface panel
+COL_SURFACE1  = "#45475A"   # Bordes sutiles / Subtle borders
+COL_TEXT      = "#CDD6F4"   # Texto principal / Main text
+COL_SUBTEXT   = "#A6ADC8"   # Texto secundario / Secondary text
+COL_RED       = "#F38BA8"   # Rojo suave / Soft red
+COL_GREEN     = "#A6E3A1"   # Verde suave / Soft green
+COL_YELLOW    = "#F9E2AF"   # Amarillo / Yellow
+COL_BLUE      = "#89B4FA"   # Azul accent / Accent blue
+COL_MAUVE     = "#CBA6F7"   # Púrpura accent / Accent purple
 
 # =====================================================================
-# TRADUCCIONES PARA 10 IDIOMAS
+# TRADUCCIONES PARA 10 IDIOMAS / TRANSLATIONS FOR 10 LANGUAGES
 # =====================================================================
 LANG_DISPLAY_MAP = {
     "English": "en",
@@ -249,7 +255,7 @@ STRINGS = {
         "domains_label": "{total} domini",
         "running_warning": "⚠ Rilevati: {editors}",
         "hosts_write_error_title": "Errore di Permesso",
-        "hosts_write_error_msg": "Impossibile scrivere nel file hosts.\nEsegui l'applicazione come Amministratore.",
+        "hosts_write_error_msg": "Impossibile scrivere nel file hosts.\nEsegui l'applicazione como Amministratore.",
         "unexpected_error_title": "Errore Inaspettato",
         "unexpected_error_msg": "Si è verificato un errore:\n{error}",
         "block_success_title": "Blocco IA Attivo",
@@ -360,10 +366,13 @@ STRINGS = {
 }
 
 # =====================================================================
-# UTILIDADES DE SISTEMA
+# UTILIDADES DE SISTEMA / SYSTEM UTILITIES
 # =====================================================================
 def is_admin():
-    """Retorna True si el proceso corre con privilegios de Administrador."""
+    """
+    Retorna True si el proceso corre con privilegios de Administrador.
+    Returns True if the process runs with Administrator privileges.
+    """
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except Exception:
@@ -373,6 +382,7 @@ def is_admin():
 def relaunch_as_admin():
     """
     Re-lanza el ejecutable actual solicitando elevación UAC.
+    Relaunches the current executable requesting UAC elevation.
     """
     try:
         if getattr(sys, "frozen", False):
@@ -391,7 +401,10 @@ def relaunch_as_admin():
 
 
 def flush_dns():
-    """Ejecuta ipconfig /flushdns de manera silenciosa."""
+    """
+    Ejecuta ipconfig /flushdns de manera silenciosa.
+    Silently executes ipconfig /flushdns.
+    """
     try:
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -405,7 +418,10 @@ def flush_dns():
 
 
 def count_total_domains():
-    """Retorna el número total de dominios únicos en la BLOCKLIST."""
+    """
+    Retorna el número total de dominios únicos en la BLOCKLIST.
+    Returns the total number of unique domains in the BLOCKLIST.
+    """
     seen = set()
     for domains in BLOCKLIST.values():
         seen.update(domains)
@@ -413,7 +429,10 @@ def count_total_domains():
 
 
 def check_block_status():
-    """Determina si el bloqueo está activo actualmente."""
+    """
+    Determina si el bloqueo está activo actualmente.
+    Determines if the block is currently active.
+    """
     if not os.path.exists(HOSTS_PATH):
         return False
     try:
@@ -427,7 +446,10 @@ def check_block_status():
 
 
 def get_blocked_domains_count():
-    """Retorna cuántos dominios marcados con AI-Block están activos en el hosts."""
+    """
+    Retorna cuántos dominios marcados con AI-Block están activos en el hosts.
+    Returns how many domains marked with AI-Block are active in hosts.
+    """
     count = 0
     if not os.path.exists(HOSTS_PATH):
         return count
@@ -446,6 +468,10 @@ def detect_system_language():
     Detecta el idioma del sistema Windows de forma robusta.
     Retorna el código de dos letras (es, en, pt, fr, de, it, ru, zh, ja, ko).
     Si no está soportado o falla, retorna 'en' (inglés).
+
+    Robustly detects the Windows system language.
+    Returns the two-letter code (es, en, pt, fr, de, it, ru, zh, ja, ko).
+    If unsupported or fails, returns 'en' (English).
     """
     try:
         lang, _ = locale.getdefaultlocale()
@@ -456,7 +482,7 @@ def detect_system_language():
     except Exception:
         pass
     
-    # Alternativa en Windows
+    # Alternativa en Windows / Windows alternative
     try:
         lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
         lcid_map = {
@@ -480,10 +506,13 @@ def detect_system_language():
 
 
 # =====================================================================
-# ACCIONES DE BLOQUEO / DESBLOQUEO
+# ACCIONES DE BLOQUEO / DESBLOQUEO / BLOCKING / UNBLOCKING ACTIONS
 # =====================================================================
 def force_close_processes():
-    """Cierra de forma forzada los editores de IA en ejecución."""
+    """
+    Cierra de forma forzada los editores de IA en ejecución.
+    Force closes running AI editors.
+    """
     closed = []
     si = subprocess.STARTUPINFO()
     si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -503,7 +532,10 @@ def force_close_processes():
 
 
 def detect_running_ai_editors():
-    """Detecta qué editores de IA están en ejecución actualmente (sin cerrarlos)."""
+    """
+    Detecta qué editores de IA están en ejecución actualmente (sin cerrarlos).
+    Detects which AI editors are currently running (without closing them).
+    """
     running = []
     si = subprocess.STARTUPINFO()
     si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -523,12 +555,15 @@ def detect_running_ai_editors():
 
 
 def activate_block(lang):
-    """Aplica el bloqueo de red de IAs."""
-    # 1. Cierra procesos activos
+    """
+    Aplica el bloqueo de red de IAs.
+    Applies the AI network block.
+    """
+    # 1. Cierra procesos activos / 1. Close active processes
     closed_list = force_close_processes()
     s = STRINGS[lang]
 
-    # 2. Modifica el archivo hosts
+    # 2. Modifica el archivo hosts / 2. Modify hosts file
     try:
         existing_lines = []
         if os.path.exists(HOSTS_PATH):
@@ -552,10 +587,10 @@ def activate_block(lang):
             with open(HOSTS_PATH, "w", encoding="utf-8") as f:
                 f.writelines(existing_lines + new_entries)
 
-        # 3. Limpia caché DNS
+        # 3. Limpia caché DNS / 3. Flush DNS cache
         flush_dns()
 
-        # Construye detalles de procesos
+        # Construye detalles de procesos / Build process details
         if closed_list:
             process_details = f"{s['closed_processes_prefix']}{', '.join(closed_list)}"
         else:
@@ -574,7 +609,10 @@ def activate_block(lang):
 
 
 def deactivate_block(lang):
-    """Desactiva el bloqueo de red de IAs."""
+    """
+    Desactiva el bloqueo de red de IAs.
+    Deactivates the AI network block.
+    """
     s = STRINGS[lang]
     try:
         if not os.path.exists(HOSTS_PATH):
@@ -590,8 +628,10 @@ def deactivate_block(lang):
         with open(HOSTS_PATH, "w", encoding="utf-8") as f:
             f.writelines(cleaned)
 
+        # Limpia caché DNS / Flush DNS cache
         flush_dns()
 
+        # Construye mensaje de éxito / Build success message
         msg = s["unblock_success_msg"].format(removed=removed)
         return True, msg
 
@@ -602,7 +642,7 @@ def deactivate_block(lang):
 
 
 # =====================================================================
-# INTERFAZ GRÁFICA PREMIUM CON INTERNACIONALIZACIÓN
+# INTERFAZ GRÁFICA PREMIUM CON INTERNACIONALIZACIÓN / PREMIUM GUI WITH i18n
 # =====================================================================
 class AIBlockerApp:
     def __init__(self, root):
@@ -612,7 +652,7 @@ class AIBlockerApp:
         self.root.minsize(480, 600)
         self.root.configure(bg=COL_BASE)
 
-        # Intentar poner el icono si existe
+        # Intentar poner el icono si existe / Try to load icon if it exists
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
         if os.path.exists(icon_path):
             try:
@@ -620,28 +660,31 @@ class AIBlockerApp:
             except Exception:
                 pass
 
-        # Configurar tema para Combobox moderno
+        # Configurar tema para Combobox moderno / Configure theme for modern Combobox
         self._setup_ttk_styles()
 
-        # Detectar idioma inicial
+        # Detectar idioma inicial / Detect initial language
         self.current_lang = detect_system_language()
         
-        # Estado actual del archivo hosts
+        # Estado actual del archivo hosts / Current status of the hosts file
         self.is_blocked = check_block_status()
         self.is_busy = False
 
-        # Construir la interfaz
+        # Construir la interfaz / Build the interface
         self._build_header()
         self._build_status_card()
         self._build_toggle_button()
         self._build_info_panel()
         self._build_footer()
 
-        # Actualizar visualización e idioma
+        # Actualizar visualización e idioma / Update display and language
         self._update_language_ui()
 
     def _setup_ttk_styles(self):
-        """Configura estilos oscuros modernos para widgets ttk."""
+        """
+        Configura estilos oscuros modernos para widgets ttk.
+        Configures modern dark styles for ttk widgets.
+        """
         self.style = ttk.Style()
         self.style.theme_use('clam')
         self.style.configure(
@@ -654,7 +697,7 @@ class AIBlockerApp:
             lightcolor=COL_SURFACE1,
             darkcolor=COL_SURFACE1
         )
-        # Configurar colores de la lista desplegable del Combobox
+        # Configurar colores de la lista desplegable del Combobox / Configure dropdown list colors for Combobox
         self.root.option_add("*TCombobox*Listbox.background", COL_SURFACE0)
         self.root.option_add("*TCombobox*Listbox.foreground", COL_TEXT)
         self.root.option_add("*TCombobox*Listbox.selectBackground", COL_BLUE)
@@ -662,13 +705,13 @@ class AIBlockerApp:
         self.root.option_add("*TCombobox*Listbox.font", ("Segoe UI", 9))
 
     # -----------------------------------------------------------------
-    # Header — Título, Versión y Dropdown de Idioma
+    # Header — Título, Versión y Dropdown de Idioma / Header — Title, Version and Language Dropdown
     # -----------------------------------------------------------------
     def _build_header(self):
         header = tk.Frame(self.root, bg=COL_BASE)
         header.pack(fill=tk.X, padx=24, pady=(20, 0))
 
-        # Título principal
+        # Título principal / Main title
         self.title_label = tk.Label(
             header, text="🛡️  AI Network Blocker",
             font=("Segoe UI", 16, "bold"),
@@ -676,11 +719,11 @@ class AIBlockerApp:
         )
         self.title_label.pack(side=tk.LEFT)
 
-        # Contenedor a la derecha
+        # Contenedor a la derecha / Right-side panel
         right_panel = tk.Frame(header, bg=COL_BASE)
         right_panel.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Selector de idioma (Combobox)
+        # Selector de idioma (Combobox) / Language selector (Combobox)
         self.lang_var = tk.StringVar()
         self.lang_combo = ttk.Combobox(
             right_panel,
@@ -692,13 +735,13 @@ class AIBlockerApp:
         )
         self.lang_combo.pack(side=tk.LEFT, padx=(0, 10), pady=(4, 0))
         
-        # Sincronizar el valor inicial del Combobox con el idioma detectado
+        # Sincronizar el valor inicial del Combobox con el idioma detectado / Synchronize initial Combobox value with detected language
         initial_display = LANG_CODE_MAP.get(self.current_lang, "English")
         self.lang_combo.set(initial_display)
         
         self.lang_combo.bind("<<ComboboxSelected>>", self._on_language_selected)
 
-        # Etiqueta de versión
+        # Etiqueta de versión / Version label
         self.version_label = tk.Label(
             right_panel, text=f"v{APP_VERSION}",
             font=("Segoe UI", 9),
@@ -707,7 +750,7 @@ class AIBlockerApp:
         self.version_label.pack(side=tk.RIGHT, pady=(6, 0))
 
     # -----------------------------------------------------------------
-    # Card de estado — indicador visual grande
+    # Card de estado — indicador visual grande / Status card — large visual indicator
     # -----------------------------------------------------------------
     def _build_status_card(self):
         self.card_frame = tk.Frame(
@@ -719,7 +762,7 @@ class AIBlockerApp:
         inner = tk.Frame(self.card_frame, bg=COL_SURFACE0)
         inner.pack(fill=tk.X, padx=16, pady=14)
 
-        # Indicador de estado (círculo)
+        # Indicador de estado (círculo) / Status indicator (dot)
         self.status_dot = tk.Label(
             inner, text="●", font=("Segoe UI", 22),
             bg=COL_SURFACE0,
@@ -742,7 +785,7 @@ class AIBlockerApp:
         self.status_subtitle.pack(fill=tk.X)
 
     # -----------------------------------------------------------------
-    # Botón toggle principal
+    # Botón toggle principal / Main toggle button
     # -----------------------------------------------------------------
     def _build_toggle_button(self):
         btn_frame = tk.Frame(self.root, bg=COL_BASE)
@@ -759,7 +802,7 @@ class AIBlockerApp:
         self.toggle_btn.pack(fill=tk.X, ipady=6)
 
     # -----------------------------------------------------------------
-    # Panel informativo — categorías y conteo de dominios
+    # Panel informativo — categorías y conteo de dominios / Info panel — categories and domain count
     # -----------------------------------------------------------------
     def _build_info_panel(self):
         self.info_panel = tk.Frame(
@@ -768,7 +811,7 @@ class AIBlockerApp:
         )
         self.info_panel.pack(fill=tk.BOTH, expand=True, padx=24, pady=(16, 0))
 
-        # Título del panel de categorías
+        # Título del panel de categorías / Title of the categories panel
         self.title_bar = tk.Frame(self.info_panel, bg=COL_SURFACE0)
         self.title_bar.pack(fill=tk.X, padx=14, pady=(10, 4))
 
@@ -786,14 +829,14 @@ class AIBlockerApp:
         )
         self.categories_total_domains_label.pack(side=tk.RIGHT)
 
-        # Separador sutil
+        # Separador sutil / Subtle separator
         tk.Frame(self.info_panel, bg=COL_SURFACE1, height=1).pack(fill=tk.X, padx=14)
 
-        # Lista de categorías
+        # Lista de categorías / Categories list
         self.list_frame = tk.Frame(self.info_panel, bg=COL_SURFACE0)
         self.list_frame.pack(fill=tk.BOTH, expand=True, padx=14, pady=(6, 10))
 
-        # Emojis temáticos
+        # Emojis temáticos / Thematic emojis
         self.category_icons = {
             "OpenAI": "🟢", "Anthropic": "🟠", "GitHub Copilot": "🐙",
             "Google AI": "🔵", "Meta AI": "🔷", "Mistral AI": "🌊",
@@ -801,6 +844,7 @@ class AIBlockerApp:
         }
 
         # Guardar referencias de los labels de categorías para poder traducirlos dinámicamente
+        # Store references of category labels to translate them dynamically
         self.category_labels = {}
 
         for cat, domains in BLOCKLIST.items():
@@ -823,7 +867,7 @@ class AIBlockerApp:
             ).pack(side=tk.RIGHT, padx=(0, 4))
 
     # -----------------------------------------------------------------
-    # Footer — créditos y aviso de editores detectados
+    # Footer — créditos y aviso de editores detectados / Footer — credits and warning of detected editors
     # -----------------------------------------------------------------
     def _build_footer(self):
         footer = tk.Frame(self.root, bg=COL_BASE)
@@ -837,7 +881,7 @@ class AIBlockerApp:
         )
         self.footer_label.pack(side=tk.LEFT)
 
-        # Aviso en tiempo real de editores de IA activos
+        # Aviso en tiempo real de editores de IA activos / Real-time warning of active AI editors
         self.editors_label = tk.Label(
             footer, text="",
             font=("Segoe UI", 8),
@@ -847,10 +891,13 @@ class AIBlockerApp:
         self._refresh_editors_label()
 
     # -----------------------------------------------------------------
-    # Gestión de Idiomas
+    # Gestión de Idiomas / Language Management
     # -----------------------------------------------------------------
     def _on_language_selected(self, event):
-        """Manejador al cambiar idioma en el desplegable combobox."""
+        """
+        Manejador al cambiar idioma en el desplegable combobox.
+        Event handler when changing the language in the dropdown combobox.
+        """
         selected_display = self.lang_combo.get()
         selected_code = LANG_DISPLAY_MAP.get(selected_display, "en")
         
@@ -859,37 +906,43 @@ class AIBlockerApp:
             self._update_language_ui()
 
     def _update_language_ui(self):
-        """Actualiza todas las etiquetas de la GUI al idioma actual."""
+        """
+        Actualiza todas las etiquetas de la GUI al idioma actual.
+        Updates all GUI labels to the current language.
+        """
         s = STRINGS[self.current_lang]
         
-        # 1. Título de la aplicación en la cabecera
+        # 1. Título de la aplicación en la cabecera / 1. Application title in the header
         self.title_label.configure(text="🛡️  AI Network Blocker")
         
-        # 2. Título de la ventana
+        # 2. Título de la ventana / 2. Window title
         self.root.title(f"AI Network Blocker v{APP_VERSION}")
 
-        # 3. Categorías e Información
+        # 3. Categorías e Información / 3. Categories and Info
         self.categories_title_label.configure(text=s["categories_title"])
         total_domains = count_total_domains()
         self.categories_total_domains_label.configure(
             text=s["domains_label"].format(total=total_domains)
         )
 
-        # 4. Traducir los nombres de categorías en el listado
+        # 4. Traducir los nombres de categorías en el listado / 4. Translate category names in the list
         translations = CATEGORY_TRANSLATIONS.get(self.current_lang, CATEGORY_TRANSLATIONS["en"])
         for cat, label in self.category_labels.items():
             translated_name = translations.get(cat, cat)
             icon = self.category_icons.get(cat, "•")
             label.configure(text=f"  {icon}  {translated_name}")
 
-        # 5. Estado y Botón (usando la lógica de visuals existente)
+        # 5. Estado y Botón (usando la lógica de visuals existente) / 5. Status and Button (using existing visuals logic)
         self._update_visuals()
 
     # -----------------------------------------------------------------
-    # Lógica de Interacción y Estados
+    # Lógica de Interacción y Estados / Interaction and States Logic
     # -----------------------------------------------------------------
     def _handle_toggle(self):
-        """Ejecuta la acción de bloqueo/desbloqueo en un hilo independiente."""
+        """
+        Ejecuta la acción de bloqueo/desbloqueo en un hilo independiente.
+        Executes the block/unblock action in an independent thread.
+        """
         if self.is_busy:
             return
         self.is_busy = True
@@ -912,7 +965,10 @@ class AIBlockerApp:
         threading.Thread(target=task, daemon=True).start()
 
     def _on_task_done(self, ok, msg):
-        """Callback al terminar la acción en segundo plano."""
+        """
+        Callback al terminar la acción en segundo plano.
+        Callback when the background action completes.
+        """
         self.is_busy = False
         self.toggle_btn.configure(state="normal")
         self._update_visuals()
@@ -927,12 +983,15 @@ class AIBlockerApp:
             messagebox.showerror(title, msg)
 
     def _update_visuals(self):
-        """Actualiza colores y etiquetas según el estado de bloqueo."""
+        """
+        Actualiza colores y etiquetas según el estado de bloqueo.
+        Updates colors and labels according to the block status.
+        """
         s = STRINGS[self.current_lang]
         blocked_count = get_blocked_domains_count()
 
         if self.is_blocked:
-            # Estado protegido (bloqueo activo)
+            # Estado protegido (bloqueo activo) / Protected state (active blocking)
             self.status_dot.configure(fg=COL_GREEN)
             self.status_title.configure(text=s["protected_title"])
             self.status_subtitle.configure(
@@ -945,7 +1004,7 @@ class AIBlockerApp:
             )
             self.card_frame.configure(highlightbackground=COL_GREEN)
         else:
-            # Estado expuesto (bloqueo inactivo)
+            # Estado expuesto (bloqueo inactivo) / Exposed state (inactive blocking)
             self.status_dot.configure(fg=COL_RED)
             self.status_title.configure(text=s["exposed_title"])
             self.status_subtitle.configure(text=s["exposed_desc"])
@@ -957,7 +1016,10 @@ class AIBlockerApp:
             self.card_frame.configure(highlightbackground=COL_RED)
 
     def _refresh_editors_label(self):
-        """Efectúa escaneo rápido en segundo plano de editores de IA."""
+        """
+        Efectúa escaneo rápido en segundo plano de editores de IA.
+        Performs a quick background scan of AI editors.
+        """
         def scan():
             running = detect_running_ai_editors()
             s = STRINGS[self.current_lang]
@@ -971,14 +1033,16 @@ class AIBlockerApp:
 
 
 # =====================================================================
-# PUNTO DE ENTRADA PRINCIPAL
+# PUNTO DE ENTRADA PRINCIPAL / MAIN ENTRY POINT
 # =====================================================================
 if __name__ == "__main__":
     # Comprobar privilegios de administrador antes de lanzar la app
+    # Check administrator privileges before launching the app
     if not is_admin():
         relaunch_as_admin()
         
         # En caso de que falle la auto-elevación UAC, se muestra el error traducido detectado
+        # In case UAC auto-elevation fails, show the detected translated error
         detected_lang = detect_system_language()
         s = STRINGS[detected_lang]
         
@@ -991,7 +1055,7 @@ if __name__ == "__main__":
         root_temp.destroy()
         sys.exit(1)
 
-    # Iniciar la aplicación
+    # Iniciar la aplicación / Start the application
     root = tk.Tk()
     app = AIBlockerApp(root)
     root.mainloop()

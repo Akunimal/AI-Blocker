@@ -47,7 +47,7 @@ AI coding assistants have deep, unrestricted access to your files, your clipboar
 | 📊 **Category breakdown** | Visual panel listing all blocked providers with domain counts |
 | 📦 **Portable .exe** | Single-file executable (~12 MB), zero installation |
 | ⚡ **Non-blocking UI** | All operations run on background threads — the GUI never freezes |
-| 🔍 **Fully auditable** | One Python file, extensively commented in Spanish |
+| 🔍 **Fully auditable** | One Python file, extensively commented in both English and Spanish |
 
 ---
 
@@ -213,7 +213,7 @@ Just open a Pull Request or an Issue. All contributions, big or small, are value
 Trust is everything when a tool touches your system files. AI Network Blocker is:
 
 - **Auditable** — one clean Python file under 1000 lines (including all 10 language dictionaries)
-- **Commented** — every function contains detailed explanations in Spanish
+- **Commented** — every function contains detailed explanations in both English and Spanish
 - **Transparent** — no obfuscation, no compiled binary blobs in source, no telemetry, and zero network calls
 - **Deterministic** — it either edits the hosts file or it doesn't. Nothing else.
 
