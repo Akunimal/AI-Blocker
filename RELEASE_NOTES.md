@@ -1,6 +1,6 @@
-# 🛡️ AI Network Blocker — v2.1.0 (Multilingual Release)
+# 🛡️ AI Network Blocker — v1.0.1 (Multilingual Release)
 
-**Version 2.1.0 introduces full internationalization supporting 10 languages with automatic detection and manual selection.**
+**Version 1.0.1 introduces full internationalization supporting 10 languages with automatic detection and manual selection.**
 
 This is a single-click desktop tool that gives you an on/off kill switch to instantly cut internet access to all major AI coding assistants and their backend APIs. Block them when you're done working. Unblock them when you need them again. Simple as that.
 
@@ -16,7 +16,7 @@ This is a single-click desktop tool that gives you an on/off kill switch to inst
 
 ---
 
-## 🆕 What's new in v2.1.0
+## 🆕 What's new in v1.0.1
 
 ### 🌍 Internationalization (i18n) & Localisation
 - **10 languages supported**:
