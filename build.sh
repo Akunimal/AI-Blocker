@@ -35,6 +35,10 @@ echo ""
 python3 -m PyInstaller \
     --onefile \
     --windowed \
+    --add-data "translations.json:." \
+    --add-data "icon.ico:." \
+    --add-data "icon_green.ico:." \
+    --add-data "icon_red.ico:." \
     --name "AI-Blocker" \
     --clean \
     ai_blocker.py

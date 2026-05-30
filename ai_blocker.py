@@ -240,7 +240,11 @@ def load_translations():
             "no_processes_detected": "• No open AI editors detected.",
             "admin_required_title": "Access Denied",
             "admin_required_msg_windows": "Administrator privileges are required.\n\nRight-click → 'Run as administrator'.",
-            "admin_required_msg_unix": "Root privileges are required.\n\nRun with: sudo python3 ai_blocker.py"
+            "admin_required_msg_unix": "Root privileges are required.\n\nRun with: sudo python3 ai_blocker.py",
+            "profile_work": "Work",
+            "profile_personal": "Personal",
+            "profile_free": "Free",
+            "profile_custom": "Custom"
         }}
 
     # Resolve platform specific strings
@@ -1842,7 +1846,7 @@ if CURRENT_OS == "Windows":
             ("cbWndExtra", ctypes.c_int),
             ("hInstance", wintypes.HINSTANCE),
             ("hIcon", wintypes.HICON),
-            ("hCursor", wintypes.HCURSOR),
+            ("hCursor", wintypes.HANDLE),
             ("hbrBackground", wintypes.HBRUSH),
             ("lpszMenuName", wintypes.LPCWSTR),
             ("lpszClassName", wintypes.LPCWSTR),
