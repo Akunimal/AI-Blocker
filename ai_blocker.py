@@ -37,6 +37,39 @@ import threading
 APP_VERSION = "1.1.3"
 
 # =====================================================================
+# CONFIGURACIÓN LOCAL / LOCAL CONFIGURATION
+# =====================================================================
+def get_config_path():
+    if CURRENT_OS == "Windows":
+        base_dir = os.environ.get("APPDATA", os.path.expanduser("~"))
+    else:
+        base_dir = os.path.expanduser("~/.config")
+    app_dir = os.path.join(base_dir, "AI-Blocker")
+    try:
+        os.makedirs(app_dir, exist_ok=True)
+    except Exception:
+        pass
+    return os.path.join(app_dir, "config.json")
+
+def load_config():
+    path = get_config_path()
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_config(config_data):
+    path = get_config_path()
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(config_data, f, indent=4, ensure_ascii=False)
+    except Exception:
+        pass
+
+# =====================================================================
 # CONFIGURACIÓN DE DOMINIOS A BLOQUEAR / BLOCKLIST DOMAIN CONFIGURATION
 # =====================================================================
 BLOCKLIST = {
@@ -74,6 +107,17 @@ BLOCKLIST = {
         "app.wordware.ai",
     ],
 }
+
+# Merge custom domains from local config into BLOCKLIST at startup
+_startup_config = load_config()
+_custom_domains = _startup_config.get("custom_domains", {})
+for _cat, _domains in _custom_domains.items():
+    if _cat in BLOCKLIST:
+        for _domain in _domains:
+            if _domain not in BLOCKLIST[_cat]:
+                BLOCKLIST[_cat].append(_domain)
+    else:
+        BLOCKLIST[_cat] = _domains
 
 if CURRENT_OS == "Windows":
     PROCESS_LIST = [
@@ -573,19 +617,30 @@ class AIBlockerApp:
         # Configurar tema para Combobox moderno / Configure theme for modern Combobox
         self._setup_ttk_styles()
 
-        # Detectar idioma inicial / Detect initial language
-        self.current_lang = detect_system_language()
+        # Cargar configuración local / Load local configuration
+        self.config = load_config()
+
+        # Detectar/cargar idioma inicial / Detect/load initial language
+        self.current_lang = self.config.get("language", detect_system_language())
+        if self.current_lang not in STRINGS:
+            self.current_lang = "en"
         
         # Estado actual del archivo hosts / Current status of the hosts file
         self.is_blocked, _ = get_hosts_status()
         self.is_busy = False
         self._scan_after_id = None
 
+        # Cargar perfil guardado / Load saved profile
+        self.selected_profile_key = self.config.get("profile", "work")
+
         # Estado de categorías y variables / Category state and variables
         self.category_vars = {}
         self.category_checkboxes = {}
+        checked_cats = self.config.get("checked_categories", {})
         for cat in BLOCKLIST:
-            self.category_vars[cat] = tk.BooleanVar(value=True)
+            # Por defecto True, salvo si está en las preferencias guardadas
+            default_val = checked_cats.get(cat, True)
+            self.category_vars[cat] = tk.BooleanVar(value=default_val)
 
         # Construir la interfaz / Build the interface
         self._build_header()
@@ -751,6 +806,18 @@ class AIBlockerApp:
         )
         self.categories_title_label.pack(side=tk.LEFT)
 
+        # Botón "+" de dominios personalizados / "+" button for custom domains
+        self.add_custom_btn = tk.Button(
+            self.title_bar, text="＋",
+            font=(UI_FONT, 9, "bold"),
+            bg=COL_SURFACE0, fg=COL_BLUE,
+            activebackground=COL_SURFACE1, activeforeground="#FFFFFF",
+            bd=0, cursor="hand2",
+            padx=4, pady=0,
+            command=self._on_add_custom_domain
+        )
+        self.add_custom_btn.pack(side=tk.LEFT, padx=(8, 0))
+
         self.categories_total_domains_label = tk.Label(
             self.title_bar, text="",
             font=(UI_FONT, 9),
@@ -772,14 +839,25 @@ class AIBlockerApp:
             "Microsoft Copilot": "🟦", "DeepSeek": "🔮", "Otros": "📦",
         }
 
-        # Guardar referencias de los checkboxes de categorías para poder traducirlos dinámicamente
+        # Dibujar la lista inicial / Draw the initial list
+        self._populate_category_list()
+
+    def _populate_category_list(self):
+        # Limpiar lista anterior / Clear previous list
+        for child in self.list_frame.winfo_children():
+            child.destroy()
+
         self.category_checkboxes = {}
 
         for cat, domains in BLOCKLIST.items():
+            # Asegurar que existe una variable para esta categoría / Ensure variable exists for this category
+            if cat not in self.category_vars:
+                self.category_vars[cat] = tk.BooleanVar(value=True)
+
             row = tk.Frame(self.list_frame, bg=COL_SURFACE0)
             row.pack(fill=tk.X, pady=1)
 
-            icon = self.category_icons.get(cat, "•")
+            icon = self.category_icons.get(cat, "📦") # fallback to box for custom
             chk = tk.Checkbutton(
                 row,
                 text=f"  {icon}  {cat}",
@@ -806,6 +884,111 @@ class AIBlockerApp:
                 font=(UI_FONT, 9, "bold"), bg=COL_SURFACE0,
                 fg=COL_BLUE, anchor="e",
             ).pack(side=tk.RIGHT, padx=(0, 4))
+            
+        # Traducir nombres al idioma actual / Translate names to current language
+        translations = CATEGORY_TRANSLATIONS.get(self.current_lang, CATEGORY_TRANSLATIONS["en"])
+        for cat, chk in self.category_checkboxes.items():
+            translated_name = translations.get(cat, cat)
+            icon = self.category_icons.get(cat, "📦")
+            chk.configure(text=f"  {icon}  {translated_name}")
+
+    def _save_current_config(self):
+        checked = {cat: var.get() for cat, var in self.category_vars.items()}
+        self.config["language"] = self.current_lang
+        self.config["profile"] = self.selected_profile_key
+        self.config["checked_categories"] = checked
+        save_config(self.config)
+
+    def _on_add_custom_domain(self):
+        # Open a small dialog
+        dialog = tk.Toplevel(self.root)
+        dialog.title(STRINGS[self.current_lang].get("add_custom_title", "Add Custom Domain"))
+        dialog.geometry("350x200")
+        dialog.resizable(False, False)
+        dialog.configure(bg=COL_BASE)
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # Center dialog relative to main window
+        x = self.root.winfo_x() + (self.root.winfo_width() - 350) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - 200) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        # Input labels and entries
+        s = STRINGS[self.current_lang]
+        
+        lbl_domain = tk.Label(dialog, text=s.get("add_domain_label", "Domain (e.g. example.com):"), bg=COL_BASE, fg=COL_TEXT, font=(UI_FONT, 9))
+        lbl_domain.pack(anchor="w", padx=20, pady=(20, 0))
+        
+        entry_domain = tk.Entry(dialog, bg=COL_SURFACE0, fg=COL_TEXT, insertbackground=COL_TEXT, bd=1, relief="flat", font=(UI_FONT, 9))
+        entry_domain.pack(fill=tk.X, padx=20, pady=(4, 0))
+        entry_domain.focus_set()
+
+        lbl_cat = tk.Label(dialog, text=s.get("add_cat_label", "Category:"), bg=COL_BASE, fg=COL_TEXT, font=(UI_FONT, 9))
+        lbl_cat.pack(anchor="w", padx=20, pady=(10, 0))
+        
+        entry_cat = tk.Entry(dialog, bg=COL_SURFACE0, fg=COL_TEXT, insertbackground=COL_TEXT, bd=1, relief="flat", font=(UI_FONT, 9))
+        entry_cat.pack(fill=tk.X, padx=20, pady=(4, 0))
+        entry_cat.insert(0, s.get("profile_custom", "Custom"))
+
+        def save():
+            domain = entry_domain.get().strip().lower()
+            cat = entry_cat.get().strip()
+            
+            if not domain:
+                return
+                
+            # Basic domain validation
+            if "." not in domain or len(domain) < 4:
+                messagebox.showerror(s.get("unexpected_error_title", "Error"), s.get("invalid_domain_msg", "Please enter a valid domain."))
+                return
+                
+            self._add_custom_domain_to_list(domain, cat)
+            dialog.destroy()
+
+        btn_save = tk.Button(
+            dialog, text=s.get("btn_save", "Save"),
+            bg=COL_BLUE, fg="#000000", activebackground="#6aa1f7",
+            font=(UI_FONT, 9, "bold"), bd=0, cursor="hand2",
+            command=save, height=1
+        )
+        btn_save.pack(side=tk.RIGHT, padx=20, pady=20)
+
+    def _add_custom_domain_to_list(self, domain, cat):
+        if not cat:
+            cat = "Otros"
+            
+        # Ensure category is in BLOCKLIST
+        if cat not in BLOCKLIST:
+            BLOCKLIST[cat] = []
+        if domain not in BLOCKLIST[cat]:
+            BLOCKLIST[cat].append(domain)
+            
+        # Update config
+        custom_domains = self.config.get("custom_domains", {})
+        if cat not in custom_domains:
+            custom_domains[cat] = []
+        if domain not in custom_domains[cat]:
+            custom_domains[cat].append(domain)
+            
+        self.config["custom_domains"] = custom_domains
+        self._save_current_config()
+        
+        # Repopulate UI list
+        self._populate_category_list()
+        
+        # Update domain count labels
+        s = STRINGS[self.current_lang]
+        total_domains = count_total_domains()
+        self.categories_total_domains_label.configure(
+            text=s["domains_label"].format(total=total_domains)
+        )
+        
+        # Re-apply block if active
+        if self.is_blocked:
+            self._handle_reapply_block()
+        else:
+            self._update_visuals()
 
     # -----------------------------------------------------------------
     # Footer — créditos y aviso de editores detectados / Footer — credits and warning of detected editors
@@ -845,6 +1028,7 @@ class AIBlockerApp:
         if selected_code != self.current_lang:
             self.current_lang = selected_code
             self._update_language_ui()
+            self._save_current_config()
 
     def _update_language_ui(self):
         """
@@ -909,6 +1093,8 @@ class AIBlockerApp:
         if not profile_key or profile_key == "custom":
             return
             
+        self.selected_profile_key = profile_key
+
         # Update category variables
         if profile_key == "work":
             for cat in self.category_vars:
@@ -921,6 +1107,9 @@ class AIBlockerApp:
             for cat in self.category_vars:
                 self.category_vars[cat].set(False)
                 
+        # Save current preferences
+        self._save_current_config()
+
         # Apply the changes
         if self.is_blocked:
             self._handle_reapply_block()
@@ -935,14 +1124,19 @@ class AIBlockerApp:
         
         s = STRINGS[self.current_lang]
         if len(active_cats) == len(all_cats):
-            self.profile_combo.set(s["profile_work"])
+            self.selected_profile_key = "work"
         elif len(active_cats) == 0:
-            self.profile_combo.set(s["profile_free"])
+            self.selected_profile_key = "free"
         elif sorted(active_cats) == sorted(copilot_cats):
-            self.profile_combo.set(s["profile_personal"])
+            self.selected_profile_key = "personal"
         else:
-            self.profile_combo.set(s["profile_custom"])
+            self.selected_profile_key = "custom"
             
+        self.profile_combo.set(s[f"profile_{self.selected_profile_key}"])
+        
+        # Save current preferences
+        self._save_current_config()
+
         if self.is_blocked:
             self._handle_reapply_block()
         else:

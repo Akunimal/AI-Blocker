@@ -39,7 +39,12 @@
       "profile_work": "Work",
       "profile_personal": "Personal",
       "profile_free": "Free",
-      "profile_custom": "Custom"
+      "profile_custom": "Custom",
+      "add_custom_title": "Add Custom Domain",
+      "add_domain_label": "Domain (e.g., example.com):",
+      "add_cat_label": "Category:",
+      "btn_save": "Save",
+      "invalid_domain_msg": "Please enter a valid domain (e.g. example.com)."
     },
     "es": {
       "protected_title": "PROTEGIDO — Bloqueo activo",
@@ -68,7 +73,12 @@
       "profile_work": "Trabajo",
       "profile_personal": "Personal",
       "profile_free": "Libre",
-      "profile_custom": "Personalizado"
+      "profile_custom": "Personalizado",
+      "add_custom_title": "Añadir dominio",
+      "add_domain_label": "Dominio (ej: ejemplo.com):",
+      "add_cat_label": "Categoría:",
+      "btn_save": "Guardar",
+      "invalid_domain_msg": "Por favor, introduce un dominio válido (ej: ejemplo.com)."
     },
     "pt": {
       "protected_title": "PROTEGIDO — Bloqueio ativo",
@@ -97,7 +107,12 @@
       "profile_work": "Trabalho",
       "profile_personal": "Pessoal",
       "profile_free": "Livre",
-      "profile_custom": "Personalizado"
+      "profile_custom": "Personalizado",
+      "add_custom_title": "Adicionar domínio personalizado",
+      "add_domain_label": "Domínio (ex: exemplo.com):",
+      "add_cat_label": "Categoria:",
+      "btn_save": "Salvar",
+      "invalid_domain_msg": "Por favor, insira um domínio válido (ex: exemplo.com)."
     },
     "fr": {
       "protected_title": "PROTÉGÉ — Blocage actif",
@@ -126,7 +141,12 @@
       "profile_work": "Travail",
       "profile_personal": "Personnel",
       "profile_free": "Libre",
-      "profile_custom": "Personnalisé"
+      "profile_custom": "Personnalisé",
+      "add_custom_title": "Ajouter un domaine personnalisé",
+      "add_domain_label": "Domaine (ex : exemple.com) :",
+      "add_cat_label": "Catégorie :",
+      "btn_save": "Enregistrer",
+      "invalid_domain_msg": "Veuillez entrer un domaine valide (ex : exemple.com)."
     },
     "de": {
       "protected_title": "GESCHÜTZT — Blockierung aktiv",
@@ -155,7 +175,12 @@
       "profile_work": "Arbeit",
       "profile_personal": "Persönlich",
       "profile_free": "Frei",
-      "profile_custom": "Benutzerdefiniert"
+      "profile_custom": "Benutzerdefiniert",
+      "add_custom_title": "Benutzerdefinierte Domain hinzufügen",
+      "add_domain_label": "Domain (z.B. beispiel.de):",
+      "add_cat_label": "Kategorie:",
+      "btn_save": "Speichern",
+      "invalid_domain_msg": "Bitte geben Sie eine gültige Domain ein (z.B. beispiel.de)."
     },
     "it": {
       "protected_title": "PROTETTO — Blocco attivo",
@@ -184,7 +209,12 @@
       "profile_work": "Lavoro",
       "profile_personal": "Personale",
       "profile_free": "Libero",
-      "profile_custom": "Personalizzato"
+      "profile_custom": "Personalizzato",
+      "add_custom_title": "Aggiungi dominio personalizzato",
+      "add_domain_label": "Dominio (es: esempio.com):",
+      "add_cat_label": "Categoria:",
+      "btn_save": "Salva",
+      "invalid_domain_msg": "Inserisci un dominio valido (es: esempio.com)."
     },
     "ru": {
       "protected_title": "ЗАЩИЩЕНО — Блокировка активна",
@@ -213,7 +243,12 @@
       "profile_work": "Работа",
       "profile_personal": "Личный",
       "profile_free": "Свободно",
-      "profile_custom": "Пользовательский"
+      "profile_custom": "Пользовательский",
+      "add_custom_title": "Добавить свой домен",
+      "add_domain_label": "Домен (например, example.com):",
+      "add_cat_label": "Категория:",
+      "btn_save": "Сохранить",
+      "invalid_domain_msg": "Пожалуйста, введите корректный домен (например, example.com)."
     },
     "zh": {
       "protected_title": "已保护 — 拦截处于激活状态",
@@ -234,7 +269,7 @@
       "block_success_msg": "成功启用拦截！\n\n✓ hosts 文件中已拦截 {added_count} 个域名。\n{process_details}\n✓ DNS 缓存已清空。",
       "unblock_success_title": "AI 拦截已禁用",
       "unblock_success_msg": "AI 拦截已成功关闭！\n\n✓ 已从 hosts 文件中移除 {removed} 条记录。\n✓ DNS 缓存已清空。\n\n所有 AI 服务已恢复网络访问。",
-      "closed_processes_prefix": "✓ 已关闭的进程: ",
+      "closed_processes_prefix": "✓ 已关闭 the 进程: ",
       "no_processes_detected": "• 未检测到运行中的 AI 编辑器。",
       "admin_required_title": "拒绝访问",
       "admin_required_msg_windows": "需要管理员权限。\n\n请右键单击 → 选择 “以管理员身份运行”。",
@@ -242,7 +277,12 @@
       "profile_work": "工作",
       "profile_personal": "个人",
       "profile_free": "免费/自由",
-      "profile_custom": "自定义"
+      "profile_custom": "自定义",
+      "add_custom_title": "添加自定义域名",
+      "add_domain_label": "域名 (例如 example.com):",
+      "add_cat_label": "分类:",
+      "btn_save": "保存",
+      "invalid_domain_msg": "请输入有效的域名 (例如 example.com)。"
     },
     "ja": {
       "protected_title": "保護中 — ブロック有効",
@@ -271,7 +311,12 @@
       "profile_work": "仕事",
       "profile_personal": "個人",
       "profile_free": "フリー",
-      "profile_custom": "カスタム"
+      "profile_custom": "カスタム",
+      "add_custom_title": "カスタムドメインの追加",
+      "add_domain_label": "ドメイン (例: example.com):",
+      "add_cat_label": "カテゴリ:",
+      "btn_save": "保存",
+      "invalid_domain_msg": "有効なドメインを入力してください (例: example.com)。"
     },
     "ko": {
       "protected_title": "보호됨 — 블록 활성화됨",
@@ -300,7 +345,12 @@
       "profile_work": "작업",
       "profile_personal": "개인",
       "profile_free": "자유",
-      "profile_custom": "사용자 정의"
+      "profile_custom": "사용자 정의",
+      "add_custom_title": "사용자 정의 도메인 추가",
+      "add_domain_label": "도메인 (예: example.com):",
+      "add_cat_label": "카테고리:",
+      "btn_save": "저장",
+      "invalid_domain_msg": "올바른 도메인을 입력해 주세요 (예: example.com)."
     }
   }
 }
