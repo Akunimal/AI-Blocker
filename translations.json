@@ -462,6 +462,5 @@
       "verify_exposed": "⚠️ 실시간 확인: api.openai.com 접속 가능!",
       "verify_no_internet": "🔌 실시간 확인: 인터넷 연결 없음"
     }
-    }
   }
 }
