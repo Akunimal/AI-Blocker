@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.2.0] - 2026-05-30
+### Added
+- Added keyboard shortcuts (Ctrl+B to toggle block, Ctrl+Q to quit, Ctrl+L to toggle log panel).
+- Added a "Copy Log" button to quickly copy the activity log to the clipboard.
+- Display elapsed time since the last block toggle directly in the status card UI.
+- Added xAI (Grok) domains to the blocklist.
+
+### Fixed
+- Fixed a bug in the button color animation during state transitions.
+
 ## [v1.1.4] - 2026-05-30
 ### Added
 - Implemented selective category blocking allowing users to toggle individual AI service categories.

@@ -37,7 +37,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 # =====================================================================
 # VERSIÓN / VERSION
 # =====================================================================
-APP_VERSION = "1.1.6"
+APP_VERSION = "1.2.0"
 
 # =====================================================================
 # CONFIGURACIÓN LOCAL / LOCAL CONFIGURATION
@@ -104,6 +104,9 @@ BLOCKLIST = {
     ],
     "DeepSeek": [
         "deepseek.com", "api.deepseek.com",
+    ],
+    "xAI": [
+        "api.x.ai", "grok.x.ai", "x.ai",
     ],
     "Otros": [
         "api.perplexity.ai", "perplexity.ai",
@@ -219,7 +222,7 @@ def load_translations():
     except Exception as e:
         print(f"Warning: Failed to load translations.json: {e}")
         # Minimal hardcoded fallback
-        CATEGORY_TRANSLATIONS = {"en": {"OpenAI": "OpenAI", "Anthropic": "Anthropic", "GitHub Copilot": "GitHub Copilot", "Google AI": "Google AI", "Meta AI": "Meta AI", "Mistral AI": "Mistral AI", "Microsoft Copilot": "Microsoft Copilot", "DeepSeek": "DeepSeek", "Otros": "Others"}}
+        CATEGORY_TRANSLATIONS = {"en": {"OpenAI": "OpenAI", "Anthropic": "Anthropic", "GitHub Copilot": "GitHub Copilot", "Google AI": "Google AI", "Meta AI": "Meta AI", "Mistral AI": "Mistral AI", "Microsoft Copilot": "Microsoft Copilot", "DeepSeek": "DeepSeek", "xAI": "xAI", "Otros": "Others"}}
         STRINGS = {"en": {
             "protected_title": "PROTECTED — Blocking active",
             "protected_desc": "{count} domains redirected to 127.0.0.1",
@@ -733,6 +736,7 @@ class AIBlockerApp:
         self.active_toasts = []
         self.logs = self.config.get("logs", [])
         self.log_expanded = False
+        self.last_toggle_time = self.config.get("last_toggle_time", None)
         self.gateway_server = None
         self.gateway_running = False
 
@@ -755,6 +759,11 @@ class AIBlockerApp:
             self.tray_icon = WindowsTrayIcon(self)
         else:
             self.root.protocol("WM_DELETE_WINDOW", self.exit_app)
+
+        # Atajos de teclado / Keyboard shortcuts
+        self.root.bind("<Control-b>", lambda e: self._handle_toggle())
+        self.root.bind("<Control-q>", lambda e: self.exit_app())
+        self.root.bind("<Control-l>", lambda e: self._toggle_log_panel())
 
         # Configurar Notebook (Pestañas) / Configure Notebook (Tabs)
         self.notebook = ttk.Notebook(self.root)
@@ -975,7 +984,7 @@ class AIBlockerApp:
         self.category_icons = {
             "OpenAI": "🟢", "Anthropic": "🟠", "GitHub Copilot": "🐙",
             "Google AI": "🔵", "Meta AI": "🔷", "Mistral AI": "🌊",
-            "Microsoft Copilot": "🟦", "DeepSeek": "🔮", "Otros": "📦",
+            "Microsoft Copilot": "🟦", "DeepSeek": "🔮", "xAI": "🤖", "Otros": "📦",
         }
 
         # Dibujar la lista inicial / Draw the initial list
@@ -1502,6 +1511,13 @@ class AIBlockerApp:
     def _on_reapply_done(self, ok, msg):
         self.is_busy = False
         self.toggle_btn.configure(state="normal")
+        
+        if ok:
+            import time
+            self.last_toggle_time = time.time()
+            self.config["last_toggle_time"] = self.last_toggle_time
+            self._save_current_config()
+            
         self._update_visuals()
         self._refresh_editors_label()
         self._run_connectivity_check()
@@ -1556,6 +1572,13 @@ class AIBlockerApp:
         """
         self.is_busy = False
         self.toggle_btn.configure(state="normal")
+        
+        if ok:
+            import time
+            self.last_toggle_time = time.time()
+            self.config["last_toggle_time"] = self.last_toggle_time
+            self._save_current_config()
+            
         self._update_visuals()
         self._refresh_editors_label()
         self._run_connectivity_check()
@@ -1662,6 +1685,15 @@ class AIBlockerApp:
         self.log_text.see(tk.END)
         self.log_text.configure(state="disabled")
 
+    def _copy_log(self):
+        if self.logs:
+            self.root.clipboard_clear()
+            self.root.clipboard_append("\n".join(self.logs))
+            s = STRINGS[self.current_lang]
+            title = s.get("log_copied_title", "Copied")
+            msg = s.get("log_copied_msg", "Activity log copied to clipboard.")
+            self.show_toast(title, msg, "info")
+
     def _toggle_log_panel(self):
         s = STRINGS[self.current_lang]
         title = s.get("log_title", "Activity Log")
@@ -1713,6 +1745,16 @@ class AIBlockerApp:
             command=self._toggle_log_panel
         )
         self.log_toggle_btn.pack(side=tk.LEFT)
+
+        self.log_copy_btn = tk.Button(
+            log_header, text="📋",
+            font=(UI_FONT, 9),
+            bg=COL_BASE, fg=COL_SUBTEXT,
+            activebackground=COL_BASE, activeforeground=COL_TEXT,
+            bd=0, cursor="hand2", anchor="e",
+            command=self._copy_log
+        )
+        self.log_copy_btn.pack(side=tk.RIGHT)
 
         self.log_box_frame = tk.Frame(
             self.log_container, bg=COL_SURFACE0,
@@ -1920,11 +1962,20 @@ class AIBlockerApp:
         actual_blocked, blocked_count = get_hosts_status()
         self.is_blocked = actual_blocked  # Sincronizar estado real del archivo hosts
 
+        import time
+        time_str = ""
+        if hasattr(self, 'last_toggle_time') and self.last_toggle_time:
+            mins = int((time.time() - self.last_toggle_time) / 60)
+            if mins > 0:
+                time_str = f" ({mins}m)"
+            else:
+                time_str = " (now)"
+
         # Define targets
         if self.is_blocked:
             target_dot_fg = COL_GREEN
             target_title = s["protected_title"]
-            target_subtitle = s["protected_desc"].format(count=blocked_count)
+            target_subtitle = s["protected_desc"].format(count=blocked_count) + time_str
             target_btn_text = s["btn_unblock"]
             target_btn_bg = "#2D6A4F"
             target_btn_fg = "#A6E3A1"
@@ -1933,7 +1984,7 @@ class AIBlockerApp:
         else:
             target_dot_fg = COL_RED
             target_title = s["exposed_title"]
-            target_subtitle = s["exposed_desc"]
+            target_subtitle = s["exposed_desc"] + time_str
             target_btn_text = s["btn_block"]
             target_btn_bg = "#6B1E2B"
             target_btn_fg = "#F38BA8"
@@ -1965,8 +2016,8 @@ class AIBlockerApp:
             self._animation_tick(
                 self._anim_id,
                 src_hl, target_hl,
-                src_bg, target_bg,
-                src_fg, target_fg,
+                src_bg, target_btn_bg,
+                src_fg, target_btn_fg,
                 15, 0
             )
             self.last_visuals_blocked = self.is_blocked
