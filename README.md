@@ -104,6 +104,10 @@ python ai_blocker.py
 sudo python3 ai_blocker.py
 ```
 
+### DevSec Auditor API keys
+
+The DevSec Auditor asks for an OpenAI API key only when you run an audit. The key is kept in memory for that run and is not written to `config.json`. If you prefer not to paste it into the UI each time, set `OPENAI_API_KEY` in your environment before launching the app.
+
 ---
 
 ## 🔨 Building the .exe yourself

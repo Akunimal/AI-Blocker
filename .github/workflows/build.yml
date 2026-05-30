@@ -1,22 +1,29 @@
 name: Build and Release Binaries
 
 on:
-  release:
-    types: [published]
   push:
     branches:
       - main
-  workflow_dispatch: # Permite ejecutar la compilación manualmente desde la pestaña "Actions"
+  pull_request:
+    branches:
+      - main
+  release:
+    types: [published]
+  workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag name (e.g. v1.2.0)'
+        description: "Tag name to publish when release publishing is enabled"
         required: false
-        default: 'v1.2.0'
+        default: "v1.2.1"
       release_name:
-        description: 'Release name'
+        description: "Release name to publish when release publishing is enabled"
         required: false
-        default: 'v1.2.0 - Mini Improvements & xAI Support'
-
+        default: "v1.2.1 - Security & Release Workflow Fixes"
+      publish_release:
+        description: "Upload build outputs to the GitHub Release"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -26,6 +33,7 @@ jobs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
@@ -36,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -45,39 +53,58 @@ jobs:
 
       - name: Build with PyInstaller (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --windowed --uac-admin --add-data "translations.json;." --add-data "icon.ico;." --add-data "icon_green.ico;." --add-data "icon_red.ico;." --name "AI-Router-Blocker-AiO" --clean ai_blocker.py
+        run: >
+          pyinstaller --onefile --windowed --uac-admin
+          --add-data "translations.json;."
+          --add-data "icon.ico;."
+          --add-data "icon_green.ico;."
+          --add-data "icon_red.ico;."
+          --name "AI-Router-Blocker-AiO"
+          --clean ai_blocker.py
 
       - name: Build with PyInstaller (Unix)
         if: runner.os != 'Windows'
-        run: pyinstaller --onefile --windowed --add-data "translations.json:." --add-data "icon.ico:." --add-data "icon_green.ico:." --add-data "icon_red.ico:." --name "AI-Router-Blocker-AiO" --clean ai_blocker.py
+        run: >
+          pyinstaller --onefile --windowed
+          --add-data "translations.json:."
+          --add-data "icon.ico:."
+          --add-data "icon_green.ico:."
+          --add-data "icon_red.ico:."
+          --name "AI-Router-Blocker-AiO"
+          --clean ai_blocker.py
 
-      - name: Rename and zip assets
+      - name: Rename release assets
         shell: bash
         run: |
           cd dist
-          if [ "$RUNNER_OS" == "Windows" ]; then
+          if [ "$RUNNER_OS" = "Windows" ]; then
             mv "AI-Router-Blocker-AiO.exe" "AI-Router-Blocker-AiO-Windows.exe"
-          elif [ "$RUNNER_OS" == "macOS" ]; then
+          elif [ "$RUNNER_OS" = "macOS" ]; then
             if [ -f "AI-Router-Blocker-AiO.app/Contents/MacOS/AI-Router-Blocker-AiO" ]; then
               cp "AI-Router-Blocker-AiO.app/Contents/MacOS/AI-Router-Blocker-AiO" "AI-Router-Blocker-AiO-macOS"
             fi
-            zip -r AI-Router-Blocker-AiO-macOS.app.zip AI-Router-Blocker-AiO.app
+            if [ -d "AI-Router-Blocker-AiO.app" ]; then
+              zip -r "AI-Router-Blocker-AiO-macOS.app.zip" "AI-Router-Blocker-AiO.app"
+            fi
           else
             mv "AI-Router-Blocker-AiO" "AI-Router-Blocker-AiO-Linux"
           fi
 
-      - name: Upload Release Assets
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Router-Blocker-AiO-${{ runner.os }}
+          path: dist/AI-Router-Blocker-AiO-*
+          if-no-files-found: error
+
+      - name: Upload GitHub Release assets
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag_name || 'v1.2.0' }}
-          name: ${{ github.event.release.name || github.event.inputs.release_name || 'v1.2.0 - Mini Improvements & xAI Support' }}
-          body: |
-            ### 🚀 v1.2.0 - Mini Improvements
-            - **Keyboard Shortcuts**: Added `Ctrl+B` (toggle block), `Ctrl+Q` (quit), and `Ctrl+L` (toggle log).
-            - **Copy Log**: Added a "Copy Log" button to export activity easily.
-            - **Time Elapsed**: Display elapsed time since the last block toggle in the UI.
-            - **xAI Support**: Added Grok (`api.x.ai`, `x.ai`, `grok.x.ai`) to the blocklist.
-            - **Bug Fix**: Fixed color animation logic during state transitions.
+          tag_name: ${{ github.event.release.tag_name || inputs.tag_name }}
+          name: ${{ github.event.release.name || inputs.release_name }}
+          body_path: RELEASE_NOTES.md
           files: dist/AI-Router-Blocker-AiO-*
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

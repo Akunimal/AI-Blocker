@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.2.1] - 2026-05-30
+### Changed
+- Updated the release workflow so pushes and pull requests build CI artifacts without publishing to an existing GitHub Release.
+- Release publishing now happens only from published releases or an explicit manual workflow dispatch with release publishing enabled.
+
+### Fixed
+- Prevented the DevSec Auditor OpenAI API key from being persisted to `config.json`.
+- Added runtime support for pre-filling the auditor key from `OPENAI_API_KEY`.
+- Clarified the English release documentation for the three OS build artifacts.
+
 ## [v1.2.0] - 2026-05-30
 ### Added
 - Added keyboard shortcuts (Ctrl+B to toggle block, Ctrl+Q to quit, Ctrl+L to toggle log panel).
