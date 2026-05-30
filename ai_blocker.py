@@ -640,6 +640,18 @@ class AIBlockerApp:
         right_panel = tk.Frame(header, bg=COL_BASE)
         right_panel.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Selector de perfil (Combobox) / Profile selector (Combobox)
+        self.profile_var = tk.StringVar()
+        self.profile_combo = ttk.Combobox(
+            right_panel,
+            textvariable=self.profile_var,
+            state="readonly",
+            width=12,
+            font=("Segoe UI", 9)
+        )
+        self.profile_combo.pack(side=tk.LEFT, padx=(0, 10), pady=(4, 0))
+        self.profile_combo.bind("<<ComboboxSelected>>", self._on_profile_selected)
+
         # Selector de idioma (Combobox) / Language selector (Combobox)
         self.lang_var = tk.StringVar()
         self.lang_combo = ttk.Combobox(
@@ -847,21 +859,36 @@ class AIBlockerApp:
         # 2. Título de la ventana / 2. Window title
         self.root.title(f"AI Network Blocker v{APP_VERSION}")
 
-        # 3. Categorías e Información / 3. Categories and Info
+        # 3. Traducir y poblar perfiles / Translate and populate profiles
+        try:
+            old_index = self.profile_combo.current()
+            keys = ["work", "personal", "free", "custom"]
+            if 0 <= old_index < len(keys):
+                selected_key = keys[old_index]
+            else:
+                selected_key = "work"
+        except Exception:
+            selected_key = "work"
+
+        profile_names = [s["profile_work"], s["profile_personal"], s["profile_free"], s["profile_custom"]]
+        self.profile_combo['values'] = profile_names
+        self.profile_combo.set(s[f"profile_{selected_key}"])
+
+        # 4. Categorías e Información / 4. Categories and Info
         self.categories_title_label.configure(text=s["categories_title"])
         total_domains = count_total_domains()
         self.categories_total_domains_label.configure(
             text=s["domains_label"].format(total=total_domains)
         )
 
-        # 4. Traducir los nombres de categorías en el listado / 4. Translate category names in the list
+        # 5. Traducir los nombres de categorías en el listado / 5. Translate category names in the list
         translations = CATEGORY_TRANSLATIONS.get(self.current_lang, CATEGORY_TRANSLATIONS["en"])
         for cat, chk in self.category_checkboxes.items():
             translated_name = translations.get(cat, cat)
             icon = self.category_icons.get(cat, "•")
             chk.configure(text=f"  {icon}  {translated_name}")
 
-        # 5. Estado y Botón (usando la lógica de visuals existente) / 5. Status and Button (using existing visuals logic)
+        # 6. Estado y Botón (usando la lógica de visuals existente) / 6. Status and Button (using existing visuals logic)
         self._update_visuals()
 
     # -----------------------------------------------------------------
@@ -870,7 +897,52 @@ class AIBlockerApp:
     def _get_active_categories(self):
         return [cat for cat, var in self.category_vars.items() if var.get()]
 
+    def _on_profile_selected(self, event=None):
+        selected_display = self.profile_combo.get()
+        s = STRINGS[self.current_lang]
+        profile_key = None
+        for key in ["work", "personal", "free", "custom"]:
+            if s.get(f"profile_{key}", "") == selected_display:
+                profile_key = key
+                break
+        
+        if not profile_key or profile_key == "custom":
+            return
+            
+        # Update category variables
+        if profile_key == "work":
+            for cat in self.category_vars:
+                self.category_vars[cat].set(True)
+        elif profile_key == "personal":
+            for cat in self.category_vars:
+                is_copilot = "copilot" in cat.lower()
+                self.category_vars[cat].set(is_copilot)
+        elif profile_key == "free":
+            for cat in self.category_vars:
+                self.category_vars[cat].set(False)
+                
+        # Apply the changes
+        if self.is_blocked:
+            self._handle_reapply_block()
+        else:
+            self._update_visuals()
+
     def _on_category_toggled(self):
+        # Determine if the current selection matches one of the profiles
+        active_cats = self._get_active_categories()
+        all_cats = list(self.category_vars.keys())
+        copilot_cats = [c for c in all_cats if "copilot" in c.lower()]
+        
+        s = STRINGS[self.current_lang]
+        if len(active_cats) == len(all_cats):
+            self.profile_combo.set(s["profile_work"])
+        elif len(active_cats) == 0:
+            self.profile_combo.set(s["profile_free"])
+        elif sorted(active_cats) == sorted(copilot_cats):
+            self.profile_combo.set(s["profile_personal"])
+        else:
+            self.profile_combo.set(s["profile_custom"])
+            
         if self.is_blocked:
             self._handle_reapply_block()
         else:

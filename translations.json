@@ -35,7 +35,11 @@
       "no_processes_detected": "• No open AI editors detected.",
       "admin_required_title": "Access Denied",
       "admin_required_msg_windows": "Administrator privileges are required.\n\nRight-click → 'Run as administrator'.",
-      "admin_required_msg_unix": "Root privileges are required.\n\nRun with: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "Root privileges are required.\n\nRun with: sudo python3 ai_blocker.py",
+      "profile_work": "Work",
+      "profile_personal": "Personal",
+      "profile_free": "Free",
+      "profile_custom": "Custom"
     },
     "es": {
       "protected_title": "PROTEGIDO — Bloqueo activo",
@@ -60,7 +64,11 @@
       "no_processes_detected": "• No se detectaron editores de IA abiertos.",
       "admin_required_title": "Acceso Denegado",
       "admin_required_msg_windows": "Se requieren privilegios de Administrador.\n\nHaz clic derecho → 'Ejecutar como administrador'.",
-      "admin_required_msg_unix": "Se requieren privilegios de root.\n\nEjecuta con: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "Se requieren privilegios de root.\n\nEjecuta con: sudo python3 ai_blocker.py",
+      "profile_work": "Trabajo",
+      "profile_personal": "Personal",
+      "profile_free": "Libre",
+      "profile_custom": "Personalizado"
     },
     "pt": {
       "protected_title": "PROTEGIDO — Bloqueio ativo",
@@ -85,7 +93,11 @@
       "no_processes_detected": "• Nenhum editor de IA aberto detectado.",
       "admin_required_title": "Acesso Negado",
       "admin_required_msg_windows": "Privilégios de Administrador são necessários.\n\nClique com o botão direito → 'Executar como administrador'.",
-      "admin_required_msg_unix": "Privilégios de root são necessários.\n\nExecute com: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "Privilégios de root são necessários.\n\nExecute com: sudo python3 ai_blocker.py",
+      "profile_work": "Trabalho",
+      "profile_personal": "Pessoal",
+      "profile_free": "Livre",
+      "profile_custom": "Personalizado"
     },
     "fr": {
       "protected_title": "PROTÉGÉ — Blocage actif",
@@ -110,7 +122,11 @@
       "no_processes_detected": "• Aucun éditeur d'IA ouvert détecté.",
       "admin_required_title": "Accès Refusé",
       "admin_required_msg_windows": "Des privilèges d'Administrateur sont requis.\n\nFaites un clic droit → 'Exécuter en tant qu'administrateur'.",
-      "admin_required_msg_unix": "Les privilèges root sont requis.\n\nExécutez avec : sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "Les privilèges root sont requis.\n\nExécutez avec : sudo python3 ai_blocker.py",
+      "profile_work": "Travail",
+      "profile_personal": "Personnel",
+      "profile_free": "Libre",
+      "profile_custom": "Personnalisé"
     },
     "de": {
       "protected_title": "GESCHÜTZT — Blockierung aktiv",
@@ -135,7 +151,11 @@
       "no_processes_detected": "• Keine geöffneten KI-Editoren erkannt.",
       "admin_required_title": "Zugriff Verweigert",
       "admin_required_msg_windows": "Administratorrechte sind erforderlich.\n\nRechtsklick → 'Als Administrator ausführen'.",
-      "admin_required_msg_unix": "Root-Rechte sind erforderlich.\n\nAusführen mit: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "Root-Rechte sind erforderlich.\n\nAusführen mit: sudo python3 ai_blocker.py",
+      "profile_work": "Arbeit",
+      "profile_personal": "Persönlich",
+      "profile_free": "Frei",
+      "profile_custom": "Benutzerdefiniert"
     },
     "it": {
       "protected_title": "PROTETTO — Blocco attivo",
@@ -153,14 +173,18 @@
       "unexpected_error_title": "Errore Inaspettato",
       "unexpected_error_msg": "Si è verificado un errore:\n{error}",
       "block_success_title": "Blocco IA Attivo",
-      "block_success_msg": "Blocco attivato con successo!\n\n✓ {added_count} domini bloccati nel file hosts.\n{process_details}\n✓ Cache DNS svuotata.",
+      "block_success_msg": "Blocco activato con successo!\n\n✓ {added_count} domini bloccati nel file hosts.\n{process_details}\n✓ Cache DNS svuotata.",
       "unblock_success_title": "Blocco Disattivato",
       "unblock_success_msg": "Il blocco IA è stato disattivato!\n\n✓ {removed} voci rimosse dal file hosts.\n✓ Cache DNS svuotata.\n\nTutti i servizi IA sono nuovamente accessibili.",
       "closed_processes_prefix": "✓ Processi terminati: ",
       "no_processes_detected": "• Nessun editor IA aperto rilevato.",
       "admin_required_title": "Accesso Negato",
-      "admin_required_msg_windows": "Sono richiesti i privilegi di Amministratore.\n\nTasto destro → 'Esegui como amministratore'.",
-      "admin_required_msg_unix": "Sono richiesti i privilegi di root.\n\nEsegui con: sudo python3 ai_blocker.py"
+      "admin_required_msg_windows": "Sono richiesti i privileges di Amministratore.\n\nTasto destro → 'Esegui como amministratore'.",
+      "admin_required_msg_unix": "Sono richiesti i privilegi di root.\n\nEsegui con: sudo python3 ai_blocker.py",
+      "profile_work": "Lavoro",
+      "profile_personal": "Personale",
+      "profile_free": "Libero",
+      "profile_custom": "Personalizzato"
     },
     "ru": {
       "protected_title": "ЗАЩИЩЕНО — Блокировка активна",
@@ -185,7 +209,11 @@
       "no_processes_detected": "• Запущенных ИИ-редакторов не обнаружено.",
       "admin_required_title": "Доступ запрещен",
       "admin_required_msg_windows": "Требуются права Администратора.\n\nНажмите правой кнопкой мыши → 'Запуск от имени администратора'.",
-      "admin_required_msg_unix": "Требуются права root.\n\nЗапустите с помощью: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "Требуются права root.\n\nЗапустите с помощью: sudo python3 ai_blocker.py",
+      "profile_work": "Работа",
+      "profile_personal": "Личный",
+      "profile_free": "Свободно",
+      "profile_custom": "Пользовательский"
     },
     "zh": {
       "protected_title": "已保护 — 拦截处于激活状态",
@@ -210,7 +238,11 @@
       "no_processes_detected": "• 未检测到运行中的 AI 编辑器。",
       "admin_required_title": "拒绝访问",
       "admin_required_msg_windows": "需要管理员权限。\n\n请右键单击 → 选择 “以管理员身份运行”。",
-      "admin_required_msg_unix": "需要 root 权限。\n\n请使用此命令运行：sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "需要 root 权限。\n\n请使用此命令运行：sudo python3 ai_blocker.py",
+      "profile_work": "工作",
+      "profile_personal": "个人",
+      "profile_free": "免费/自由",
+      "profile_custom": "自定义"
     },
     "ja": {
       "protected_title": "保護中 — ブロック有効",
@@ -235,7 +267,11 @@
       "no_processes_detected": "• 起動中の AI エディタは検出されませんでした。",
       "admin_required_title": "アクセス拒否",
       "admin_required_msg_windows": "管理者権限が必要です。\n\n右クリック → 「管理者として実行」を選択してください。",
-      "admin_required_msg_unix": "root 権限が必要です。\n\n次のコマンドで実行してください: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "root 権限が必要です。\n\n次のコマンドで実行してください: sudo python3 ai_blocker.py",
+      "profile_work": "仕事",
+      "profile_personal": "個人",
+      "profile_free": "フリー",
+      "profile_custom": "カスタム"
     },
     "ko": {
       "protected_title": "보호됨 — 블록 활성화됨",
@@ -260,7 +296,11 @@
       "no_processes_detected": "• 실행 중인 AI 에디터가 감지되지 않았습니다.",
       "admin_required_title": "액세스 거부",
       "admin_required_msg_windows": "관리자 권한이 필요합니다。\n\n오른쪽 마우스 클릭 → '관리자 권한으로 실행'을 선택하세요.",
-      "admin_required_msg_unix": "root 권한이 필요합니다。\n\n다음 명령으로 실행하세요: sudo python3 ai_blocker.py"
+      "admin_required_msg_unix": "root 권한이 필요합니다。\n\n다음 명령으로 실행하세요: sudo python3 ai_blocker.py",
+      "profile_work": "작업",
+      "profile_personal": "개인",
+      "profile_free": "자유",
+      "profile_custom": "사용자 정의"
     }
   }
 }
