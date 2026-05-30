@@ -642,6 +642,14 @@ class AIBlockerApp:
             default_val = checked_cats.get(cat, True)
             self.category_vars[cat] = tk.BooleanVar(value=default_val)
 
+        # Configurar bandeja del sistema / Configure system tray
+        if CURRENT_OS == "Windows":
+            self.root.protocol("WM_DELETE_WINDOW", self.hide_window)
+            self.root.bind("<Unmap>", self._on_window_unmap)
+            self.tray_icon = WindowsTrayIcon(self)
+        else:
+            self.root.protocol("WM_DELETE_WINDOW", self.exit_app)
+
         # Construir la interfaz / Build the interface
         self._build_header()
         self._build_status_card()
@@ -990,6 +998,45 @@ class AIBlockerApp:
         else:
             self._update_visuals()
 
+    def hide_window(self):
+        self.root.withdraw()
+
+    def show_window(self):
+        self.root.deiconify()
+        self.root.state("normal")
+        self.root.focus_force()
+
+    def exit_app(self):
+        if CURRENT_OS == "Windows" and hasattr(self, 'tray_icon'):
+            self.tray_icon.remove()
+        self.root.destroy()
+        sys.exit(0)
+
+    def _on_window_unmap(self, event=None):
+        if event and event.widget == self.root:
+            self.root.after(10, self.root.withdraw)
+
+    def show_tray_menu(self):
+        if not hasattr(self, 'tray_menu'):
+            self.tray_menu = tk.Menu(
+                self.root, tearoff=0,
+                bg=COL_SURFACE0, fg=COL_TEXT,
+                activebackground=COL_BLUE, activeforeground="#000000",
+                font=(UI_FONT, 9)
+            )
+            
+        self.tray_menu.delete(0, tk.END)
+        s = STRINGS[self.current_lang]
+        
+        toggle_text = s["btn_unblock"] if self.is_blocked else s["btn_block"]
+        self.tray_menu.add_command(label=toggle_text, command=self._handle_toggle)
+        self.tray_menu.add_separator()
+        self.tray_menu.add_command(label=s.get("menu_show", "Show App"), command=self.show_window)
+        self.tray_menu.add_command(label=s.get("menu_exit", "Exit"), command=self.exit_app)
+        
+        x, y = self.root.winfo_pointerxy()
+        self.tray_menu.post(x, y)
+
     # -----------------------------------------------------------------
     # Footer — créditos y aviso de editores detectados / Footer — credits and warning of detected editors
     # -----------------------------------------------------------------
@@ -1256,6 +1303,10 @@ class AIBlockerApp:
             )
             self.card_frame.configure(highlightbackground=COL_RED)
 
+        # Update system tray icon if available
+        if CURRENT_OS == "Windows" and hasattr(self, 'tray_icon'):
+            self.tray_icon.update_icon()
+
     def _refresh_editors_label(self):
         """
         Efectúa escaneo rápido y recurrente en segundo plano de editores de IA.
@@ -1280,6 +1331,167 @@ class AIBlockerApp:
             self.root.after(0, update_ui)
 
         threading.Thread(target=scan, daemon=True).start()
+
+
+# =====================================================================
+# WIN32 SYSTEM TRAY INTERFACE
+# =====================================================================
+if CURRENT_OS == "Windows":
+    import ctypes
+    from ctypes import wintypes
+    
+    WM_USER = 1024
+    WM_TRAYICON = WM_USER + 20
+    NIM_ADD = 0
+    NIM_MODIFY = 1
+    NIM_DELETE = 2
+    NIF_ICON = 2
+    NIF_MESSAGE = 1
+    NIF_TIP = 4
+    WM_LBUTTONDBLCLK = 515
+    WM_RBUTTONUP = 517
+    WM_DESTROY = 2
+    
+    user32 = ctypes.windll.user32
+    shell32 = ctypes.windll.shell32
+    kernel32 = ctypes.windll.kernel32
+    
+    class WNDCLASSW(ctypes.Structure):
+        _fields_ = [
+            ("style", wintypes.UINT),
+            ("lpfnWndProc", ctypes.WINFUNCTYPE(ctypes.c_int64, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)),
+            ("cbClsExtra", ctypes.c_int),
+            ("cbWndExtra", ctypes.c_int),
+            ("hInstance", wintypes.HINSTANCE),
+            ("hIcon", wintypes.HICON),
+            ("hCursor", wintypes.HCURSOR),
+            ("hbrBackground", wintypes.HBRUSH),
+            ("lpszMenuName", wintypes.LPCWSTR),
+            ("lpszClassName", wintypes.LPCWSTR),
+        ]
+        
+    class NOTIFYICONDATAW(ctypes.Structure):
+        _fields_ = [
+            ("cbSize", wintypes.DWORD),
+            ("hWnd", wintypes.HWND),
+            ("uID", wintypes.UINT),
+            ("uFlags", wintypes.UINT),
+            ("uCallbackMessage", wintypes.UINT),
+            ("hIcon", wintypes.HICON),
+            ("szTip", ctypes.c_wchar * 128),
+            ("dwState", wintypes.DWORD),
+            ("dwStateMask", wintypes.DWORD),
+            ("szInfo", ctypes.c_wchar * 256),
+            ("uTimeout", wintypes.UINT),
+            ("szInfoTitle", ctypes.c_wchar * 64),
+            ("dwInfoFlags", wintypes.DWORD),
+            ("guidItem", ctypes.c_byte * 16),
+            ("hBalloonIcon", wintypes.HICON),
+        ]
+
+    class WindowsTrayIcon:
+        def __init__(self, app):
+            self.app = app
+            self.hwnd = None
+            self.tip = "AI Network Blocker"
+            self._added = False
+            
+            # Start message loop in a daemon thread
+            self.thread = threading.Thread(target=self._run_loop, daemon=True)
+            self.thread.start()
+            
+        def _run_loop(self):
+            WndProcType = ctypes.WINFUNCTYPE(ctypes.c_int64, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
+            
+            @WndProcType
+            def wnd_proc(hwnd, msg, wparam, lparam):
+                if msg == WM_TRAYICON:
+                    if lparam == WM_LBUTTONDBLCLK:
+                        self.app.root.after(0, self.app.show_window)
+                    elif lparam == WM_RBUTTONUP:
+                        self.app.root.after(0, self.app.show_tray_menu)
+                    return 0
+                elif msg == WM_DESTROY:
+                    user32.PostQuitMessage(0)
+                    return 0
+                return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+                
+            self.wnd_proc_ref = wnd_proc  # Keep reference
+            
+            hinstance = kernel32.GetModuleHandleW(None)
+            class_name = "AIBlockerTrayClass"
+            
+            wndclass = WNDCLASSW()
+            wndclass.style = 0
+            wndclass.lpfnWndProc = wnd_proc
+            wndclass.cbClsExtra = 0
+            wndclass.cbWndExtra = 0
+            wndclass.hInstance = hinstance
+            wndclass.hIcon = 0
+            wndclass.hCursor = 0
+            wndclass.hbrBackground = 0
+            wndclass.lpszMenuName = None
+            wndclass.lpszClassName = class_name
+            
+            user32.RegisterClassW(ctypes.byref(wndclass))
+            
+            self.hwnd = user32.CreateWindowExW(
+                0, class_name, "AI Blocker Tray Window",
+                0, 0, 0, 0, 0,
+                0, 0, hinstance, None
+            )
+            
+            self.update_icon()
+            
+            msg = wintypes.MSG()
+            while user32.GetMessageW(ctypes.byref(msg), 0, 0, 0) != 0:
+                user32.TranslateMessage(ctypes.byref(msg))
+                user32.DispatchMessageW(ctypes.byref(msg))
+                
+        def update_icon(self):
+            if not self.hwnd:
+                return
+                
+            # Try to load state-specific icon
+            if self.app.is_blocked:
+                icon_name = "icon_green.ico"
+            else:
+                icon_name = "icon_red.ico"
+                
+            icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), icon_name)
+            if not os.path.exists(icon_path):
+                # Fallback to standard icon.ico
+                icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
+                
+            hicon = 0
+            if os.path.exists(icon_path):
+                hicon = user32.LoadImageW(
+                    0, icon_path, 1, 0, 0, 16 | 80  # IMAGE_ICON, LR_LOADFROMFILE | LR_DEFAULTSIZE
+                )
+                
+            nid = NOTIFYICONDATAW()
+            nid.cbSize = ctypes.sizeof(NOTIFYICONDATAW)
+            nid.hWnd = self.hwnd
+            nid.uID = 1
+            nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP
+            nid.uCallbackMessage = WM_TRAYICON
+            nid.hIcon = hicon
+            nid.szTip = self.tip
+            
+            if self._added:
+                shell32.Shell_NotifyIconW(NIM_MODIFY, ctypes.byref(nid))
+            else:
+                shell32.Shell_NotifyIconW(NIM_ADD, ctypes.byref(nid))
+                self._added = True
+                
+        def remove(self):
+            if self.hwnd and self._added:
+                nid = NOTIFYICONDATAW()
+                nid.cbSize = ctypes.sizeof(NOTIFYICONDATAW)
+                nid.hWnd = self.hwnd
+                nid.uID = 1
+                shell32.Shell_NotifyIconW(NIM_DELETE, ctypes.byref(nid))
+                self._added = False
 
 
 # =====================================================================
