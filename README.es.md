@@ -22,7 +22,7 @@
 Te ayuda a **bloquear fugas de datos no autorizadas**, **auditar tu entorno de ejecución utilizando la API de OpenAI** y **enrutar de forma transparente las peticiones a la nube hacia tus propios modelos locales de IA** (como Llama 3 vía Ollama) o tus claves API personales (BYOK).
 
 Con un clic:
-1. **Bloquea y Redirige** más de 35 dominios de IA a `127.0.0.1` editando tu archivo hosts.
+1. **Bloquea y Redirige** más de 38 dominios de IA a `127.0.0.1` editando tu archivo hosts.
 2. **Enruta** tráfico local mediante un API Gateway transparente hacia tu LLM Local.
 3. **Audita** los procesos activos de tus editores y genera recomendaciones de seguridad a través de la API de OpenAI.
 
@@ -57,7 +57,7 @@ Los asistentes de programación de IA tienen acceso profundo y sin restricciones
 
 ## 🎯 Proveedores y Dominios Bloqueados
 
-La lista de bloqueo por defecto apunta a **más de 35 dominios** en 9 categorías:
+La lista de bloqueo por defecto apunta a **más de 38 dominios** en 10 categorías:
 
 | Proveedor | # Dominios | Dominios clave |
 |---|---|---|
@@ -69,6 +69,7 @@ La lista de bloqueo por defecto apunta a **más de 35 dominios** en 9 categoría
 | 🔷 Meta AI | 2 | `meta.ai` · `ai.meta.com` |
 | 🌊 Mistral AI | 2 | `mistral.ai` · `api.mistral.ai` |
 | 🔮 DeepSeek | 2 | `deepseek.com` · `api.deepseek.com` |
+| 🤖 xAI | 3 | `x.ai` · `api.x.ai` · `grok.x.ai` |
 | 📦 Otros | 3 | `perplexity.ai` · `app.wordware.ai` |
 
 ---

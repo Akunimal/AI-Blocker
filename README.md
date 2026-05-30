@@ -22,7 +22,7 @@
 It helps you **block unauthorized data leaks**, **audit your running environment using OpenAI's API**, and **transparently route cloud AI requests to your own Local LLMs** (like Llama 3 via Ollama) or your personal API keys (BYOK).
 
 With one click it:
-1. **Blocks & Redirects** 35+ AI domains to `127.0.0.1` in your hosts file.
+1. **Blocks & Redirects** 38+ AI domains to `127.0.0.1` in your hosts file.
 2. **Routes** local traffic through a transparent API Gateway to your Local LLM.
 3. **Audits** your active editor processes and generates security recommendations via the OpenAI API.
 
@@ -57,7 +57,7 @@ AI coding assistants have deep, unrestricted access to your files, your clipboar
 
 ## 🎯 Blocked Providers & Domains
 
-The default blocklist targets **35+ domains** across 9 categories:
+The default blocklist targets **38+ domains** across 10 categories:
 
 | Provider | # Domains | Key domains |
 |---|---|---|
@@ -69,6 +69,7 @@ The default blocklist targets **35+ domains** across 9 categories:
 | 🔷 Meta AI | 2 | `meta.ai` · `ai.meta.com` |
 | 🌊 Mistral AI | 2 | `mistral.ai` · `api.mistral.ai` |
 | 🔮 DeepSeek | 2 | `deepseek.com` · `api.deepseek.com` |
+| 🤖 xAI | 3 | `x.ai` · `api.x.ai` · `grok.x.ai` |
 | 📦 Others | 3 | `perplexity.ai` · `app.wordware.ai` |
 
 > **Want to add or remove domains?** Edit the `BLOCKLIST` dictionary at the top of [`ai_blocker.py`](ai_blocker.py). It's a simple Python dict — no recompilation needed if you run from source.
