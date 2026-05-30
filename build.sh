@@ -48,9 +48,12 @@ if [ $? -ne 0 ]; then
     echo "[ERROR] Build failed. Check errors above."
     exit 1
 fi
-
 echo "[3/3] Copying binary to project root..."
-cp -f dist/AI-Blocker ./AI-Blocker 2>/dev/null || cp -f "dist/AI-Blocker" "./AI-Blocker"
+if [ -d "dist/AI-Blocker.app" ]; then
+    cp -f "dist/AI-Blocker.app/Contents/MacOS/AI-Blocker" "./AI-Blocker" 2>/dev/null
+elif [ -f "dist/AI-Blocker" ]; then
+    cp -f dist/AI-Blocker ./AI-Blocker 2>/dev/null
+fi
 
 echo ""
 echo "============================================================"

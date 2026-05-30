@@ -6,13 +6,13 @@ on:
   workflow_dispatch: # Permite ejecutar la compilación manualmente desde la pestaña "Actions"
     inputs:
       tag_name:
-        description: 'Tag name (e.g. v1.1.4)'
+        description: 'Tag name (e.g. v1.1.5)'
         required: false
-        default: 'v1.1.4'
+        default: 'v1.1.5'
       release_name:
         description: 'Release name'
         required: false
-        default: 'v1.1.4 - Category Blocking, Profiles & Tray'
+        default: 'v1.1.5 - Cross-Platform Build Fixes'
 
 
 permissions:
@@ -42,11 +42,11 @@ jobs:
 
       - name: Build with PyInstaller (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --windowed --uac-admin --name "AI-Blocker" --clean ai_blocker.py
+        run: pyinstaller --onefile --windowed --uac-admin --add-data "translations.json;." --add-data "icon.ico;." --add-data "icon_green.ico;." --add-data "icon_red.ico;." --name "AI-Blocker" --clean ai_blocker.py
 
       - name: Build with PyInstaller (Unix)
         if: runner.os != 'Windows'
-        run: pyinstaller --onefile --windowed --name "AI-Blocker" --clean ai_blocker.py
+        run: pyinstaller --onefile --windowed --add-data "translations.json:." --add-data "icon.ico:." --add-data "icon_green.ico:." --add-data "icon_red.ico:." --name "AI-Blocker" --clean ai_blocker.py
 
       - name: Rename and zip assets
         shell: bash
@@ -55,7 +55,9 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             mv "AI-Blocker.exe" "AI-Blocker-Windows.exe"
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            mv "AI-Blocker" "AI-Blocker-macOS"
+            if [ -f "AI-Blocker.app/Contents/MacOS/AI-Blocker" ]; then
+              cp "AI-Blocker.app/Contents/MacOS/AI-Blocker" "AI-Blocker-macOS"
+            fi
             zip -r AI-Blocker-macOS.app.zip AI-Blocker.app
           else
             mv "AI-Blocker" "AI-Blocker-Linux"
@@ -64,12 +66,12 @@ jobs:
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag_name || 'v1.1.4' }}
-          name: ${{ github.event.release.name || github.event.inputs.release_name || 'v1.1.4 - Category Blocking, Profiles & Tray' }}
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag_name || 'v1.1.5' }}
+          name: ${{ github.event.release.name || github.event.inputs.release_name || 'v1.1.5 - Cross-Platform Build Fixes' }}
           body: |
-            ### Added
-            - Implemented real-time polling (every 3 seconds) for the active AI editors warning in the footer.
-            - Optimized process scanning using single-pass `tasklist` (Windows) and `ps` (Unix) to drastically reduce CPU usage.
+            ### Fixed
+            - Corrected missing translation data and icons in CI builds.
+            - Fixed macOS bundle and binary extraction in CI workflow.
           files: dist/AI-Blocker-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
