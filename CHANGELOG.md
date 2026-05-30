@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.2] - 2026-05-30
+### Added
+- Added Single Instance Lock (mutex on Windows, flock on Unix) to prevent multiple instances from causing race conditions.
+
+### Changed
+- Replaced deprecated `locale.getdefaultlocale()` with modern environment variable checks and `locale.getlocale()` for Python 3.11+ compatibility.
+- Optimized I/O operations by combining hosts file reads into a single pass at startup.
+
 ## [v1.1.1] - 2026-05-30
 ### Fixed
 - Fixed substring matching bug in `activate_block` preventing false negative domain blocks (e.g., `openai.com` bypassed if `api.openai.com` was already in hosts).

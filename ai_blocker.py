@@ -34,7 +34,7 @@ import threading
 # =====================================================================
 # VERSIÓN / VERSION
 # =====================================================================
-APP_VERSION = "1.1.1"
+APP_VERSION = "1.1.2"
 
 # =====================================================================
 # CONFIGURACIÓN DE DOMINIOS A BLOQUEAR / BLOCKLIST DOMAIN CONFIGURATION
@@ -504,57 +504,53 @@ def count_total_domains():
     return len(seen)
 
 
-def check_block_status():
+def get_hosts_status():
     """
-    Determina si el bloqueo está activo actualmente.
-    Determines if the block is currently active.
+    Lee el archivo hosts una sola vez y retorna el estado de bloqueo y la cantidad de dominios.
+    Reads the hosts file once and returns the block status and domain count.
     """
+    is_blocked = False
+    count = 0
     if not os.path.exists(HOSTS_PATH):
-        return False
+        return is_blocked, count
     try:
         with open(HOSTS_PATH, "r", encoding="utf-8") as f:
             for line in f:
                 if COMMENT_TAG in line:
-                    return True
+                    is_blocked = True
+                    if line.strip() and not line.strip().startswith("#"):
+                        count += 1
     except Exception:
         pass
-    return False
-
-
-def get_blocked_domains_count():
-    """
-    Retorna cuántos dominios marcados con AI-Block están activos en el hosts.
-    Returns how many domains marked with AI-Block are active in hosts.
-    """
-    count = 0
-    if not os.path.exists(HOSTS_PATH):
-        return count
-    try:
-        with open(HOSTS_PATH, "r", encoding="utf-8") as f:
-            for line in f:
-                if COMMENT_TAG in line and line.strip() and not line.strip().startswith("#"):
-                    count += 1
-    except Exception:
-        pass
-    return count
+    return is_blocked, count
 
 
 def detect_system_language():
     """
-    Detecta el idioma del sistema Windows de forma robusta.
+    Detecta el idioma del sistema de forma robusta y moderna.
     Retorna el código de dos letras (es, en, pt, fr, de, it, ru, zh, ja, ko).
     Si no está soportado o falla, retorna 'en' (inglés).
 
-    Robustly detects the Windows system language.
+    Robustly and modernly detects the system language.
     Returns the two-letter code (es, en, pt, fr, de, it, ru, zh, ja, ko).
     If unsupported or fails, returns 'en' (English).
     """
-    try:
-        lang, _ = locale.getdefaultlocale()
-        if lang:
-            code = lang.split('_')[0].lower()
+    # 1. Variables de entorno (cross-platform, moderno)
+    for env_var in ('LANGUAGE', 'LC_ALL', 'LC_CTYPE', 'LANG'):
+        val = os.environ.get(env_var)
+        if val:
+            code = val.split('_')[0].split('.')[0].lower()
             if code in STRINGS:
                 return code
+
+    # 2. locale.getlocale() (locale.getdefaultlocale() está deprecado en Python 3.11+)
+    try:
+        if hasattr(locale, 'getlocale'):
+            lang, _ = locale.getlocale()
+            if lang:
+                code = lang.split('_')[0].lower()
+                if code in STRINGS:
+                    return code
     except Exception:
         pass
     
@@ -766,7 +762,7 @@ class AIBlockerApp:
         self.current_lang = detect_system_language()
         
         # Estado actual del archivo hosts / Current status of the hosts file
-        self.is_blocked = check_block_status()
+        self.is_blocked, _ = get_hosts_status()
         self.is_busy = False
 
         # Construir la interfaz / Build the interface
@@ -1087,7 +1083,8 @@ class AIBlockerApp:
         Updates colors and labels according to the block status.
         """
         s = STRINGS[self.current_lang]
-        blocked_count = get_blocked_domains_count()
+        actual_blocked, blocked_count = get_hosts_status()
+        self.is_blocked = actual_blocked  # Sincronizar estado real del archivo hosts
 
         if self.is_blocked:
             # Estado protegido (bloqueo activo) / Protected state (active blocking)
@@ -1132,9 +1129,40 @@ class AIBlockerApp:
 
 
 # =====================================================================
+# BLOQUEO DE INSTANCIA ÚNICA / SINGLE INSTANCE LOCK
+# =====================================================================
+def acquire_single_instance_lock():
+    """
+    Asegura que solo se ejecute una instancia de la aplicación a la vez.
+    Ensures only one instance of the application runs at a time.
+    """
+    if CURRENT_OS == "Windows":
+        mutex_name = "Global\\AIBlocker_SingleInstance_Mutex"
+        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, mutex_name)
+        if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            return False, None
+        return True, mutex
+    else:
+        try:
+            import fcntl
+            lock_file = "/tmp/ai_blocker.lock"
+            fp = open(lock_file, "w")
+            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True, fp
+        except (IOError, OSError, ImportError):
+            return False, None
+
+
+# =====================================================================
 # PUNTO DE ENTRADA PRINCIPAL / MAIN ENTRY POINT
 # =====================================================================
 if __name__ == "__main__":
+    # Asegurar que solo hay una instancia abierta / Ensure only one instance is open
+    ok, lock_ref = acquire_single_instance_lock()
+    if not ok:
+        print("AI Network Blocker is already running.")
+        sys.exit(0)
+
     # Comprobar privilegios de administrador antes de lanzar la app
     # Check administrator privileges before launching the app
     if not is_admin():
