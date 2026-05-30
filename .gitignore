@@ -85,3 +85,7 @@ __pycache__/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# RTK (Rust Token Killer) local files
+rtk.exe
+.agents/

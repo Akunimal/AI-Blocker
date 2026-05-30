@@ -34,7 +34,7 @@ import threading
 # =====================================================================
 # VERSIÓN / VERSION
 # =====================================================================
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.1.1"
 
 # =====================================================================
 # CONFIGURACIÓN DE DOMINIOS A BLOQUEAR / BLOCKLIST DOMAIN CONFIGURATION
@@ -431,13 +431,13 @@ def relaunch_as_admin():
         try:
             if getattr(sys, "frozen", False):
                 executable = sys.executable
+                params = " ".join(f'"{a}"' for a in sys.argv[1:])
             else:
                 executable = sys.executable
+                params = " ".join(f'"{a}"' for a in sys.argv)
             
             ctypes.windll.shell32.ShellExecuteW(
-                None, "runas", executable,
-                " ".join(f'"{a}"' for a in sys.argv),
-                None, 1
+                None, "runas", executable, params, None, 1
             )
         except Exception:
             pass
@@ -559,24 +559,25 @@ def detect_system_language():
         pass
     
     # Alternativa en Windows / Windows alternative
-    try:
-        lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
-        lcid_map = {
-            1034: "es", 2058: "es", 3082: "es", 4106: "es", 5130: "es", 6154: "es",
-            1046: "pt", 2070: "pt",
-            1036: "fr", 2060: "fr", 3084: "fr",
-            1031: "de", 2055: "de",
-            1040: "it",
-            1049: "ru",
-            2052: "zh", 1028: "zh", 3076: "zh",
-            1041: "ja",
-            1042: "ko",
-        }
-        for k, v in lcid_map.items():
-            if lcid == k or (lcid & 0x3FF) == (k & 0x3FF):
-                return v
-    except Exception:
-        pass
+    if CURRENT_OS == "Windows":
+        try:
+            lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+            lcid_map = {
+                1034: "es", 2058: "es", 3082: "es", 4106: "es", 5130: "es", 6154: "es",
+                1046: "pt", 2070: "pt",
+                1036: "fr", 2060: "fr", 3084: "fr",
+                1031: "de", 2055: "de",
+                1040: "it",
+                1049: "ru",
+                2052: "zh", 1028: "zh", 3076: "zh",
+                1041: "ja",
+                1042: "ko",
+            }
+            for k, v in lcid_map.items():
+                if lcid == k or (lcid & 0x3FF) == (k & 0x3FF):
+                    return v
+        except Exception:
+            pass
         
     return "en"
 
@@ -662,15 +663,21 @@ def activate_block(lang):
             with open(HOSTS_PATH, "r", encoding="utf-8") as f:
                 existing_lines = f.readlines()
 
-        hosts_text = "".join(existing_lines)
+        existing_domains = set()
+        for line in existing_lines:
+            parts = line.strip().split()
+            if len(parts) >= 2:
+                existing_domains.add(parts[1])
+
         new_entries = []
         added_count = 0
 
         for category, domains in BLOCKLIST.items():
             for domain in domains:
                 entry = f"127.0.0.1 {domain} {COMMENT_TAG}\n"
-                if domain not in hosts_text:
+                if domain not in existing_domains:
                     new_entries.append(entry)
+                    existing_domains.add(domain)
                     added_count += 1
 
         if new_entries:
