@@ -227,7 +227,7 @@ Just open a Pull Request or an Issue. All contributions, big or small, are value
 
 ## 💡 Why open source?
 
-Trust is everything when a tool touches your system files. AI Network Blocker is:
+Trust is everything when a tool touches your system files. AI DevSec Gateway is:
 
 - **Auditable** — one clean Python file under 1200 lines (including all 10 language dictionaries)
 - **Commented** — every function contains detailed explanations in both English and Spanish
