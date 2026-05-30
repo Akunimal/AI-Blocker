@@ -668,6 +668,8 @@ class AIBlockerApp:
         self.is_blocked, _ = get_hosts_status()
         self.is_busy = False
         self._scan_after_id = None
+        self.last_visuals_blocked = self.is_blocked
+        self._anim_id = 0
 
         # Cargar perfil guardado / Load saved profile
         self.selected_profile_key = self.config.get("profile", "work")
@@ -1339,6 +1341,41 @@ class AIBlockerApp:
             title = s["hosts_write_error_title"] if "hosts" in msg else s["unexpected_error_title"]
             messagebox.showerror(title, msg)
 
+    def _interpolate_color(self, color1, color2, factor):
+        c1 = color1.lstrip("#")
+        c2 = color2.lstrip("#")
+        r1, g1, b1 = int(c1[0:2], 16), int(c1[2:4], 16), int(c1[4:6], 16)
+        r2, g2, b2 = int(c2[0:2], 16), int(c2[2:4], 16), int(c2[4:6], 16)
+        r = int(r1 + (r2 - r1) * factor)
+        g = int(g1 + (g2 - g1) * factor)
+        b = int(b1 + (b2 - b1) * factor)
+        r = max(0, min(255, r))
+        g = max(0, min(255, g))
+        b = max(0, min(255, b))
+        return f"#{r:02X}{g:02X}{b:02X}"
+
+    def _animation_tick(self, anim_id, src_hl, dst_hl, src_bg, dst_bg, src_fg, dst_fg, total_steps, current_step):
+        if anim_id != self._anim_id:
+            return
+        if current_step > total_steps:
+            self.card_frame.configure(highlightbackground=dst_hl)
+            self.status_dot.configure(fg=dst_hl)
+            self.toggle_btn.configure(bg=dst_bg, fg=dst_fg)
+            return
+            
+        factor = current_step / total_steps
+        curr_hl = self._interpolate_color(src_hl, dst_hl, factor)
+        curr_bg = self._interpolate_color(src_bg, dst_bg, factor)
+        curr_fg = self._interpolate_color(src_fg, dst_fg, factor)
+        
+        self.card_frame.configure(highlightbackground=curr_hl)
+        self.status_dot.configure(fg=curr_hl)
+        self.toggle_btn.configure(bg=curr_bg, fg=curr_fg)
+        
+        self.root.after(15, lambda: self._animation_tick(
+            anim_id, src_hl, dst_hl, src_bg, dst_bg, src_fg, dst_fg, total_steps, current_step + 1
+        ))
+
     def _update_visuals(self):
         """
         Actualiza colores y etiquetas según el estado de bloqueo.
@@ -1348,30 +1385,62 @@ class AIBlockerApp:
         actual_blocked, blocked_count = get_hosts_status()
         self.is_blocked = actual_blocked  # Sincronizar estado real del archivo hosts
 
+        # Define targets
         if self.is_blocked:
-            # Estado protegido (bloqueo activo) / Protected state (active blocking)
-            self.status_dot.configure(fg=COL_GREEN)
-            self.status_title.configure(text=s["protected_title"])
-            self.status_subtitle.configure(
-                text=s["protected_desc"].format(count=blocked_count)
-            )
-            self.toggle_btn.configure(
-                text=s["btn_unblock"],
-                bg="#2D6A4F", fg="#A6E3A1",
-                activebackground="#1B4332",
-            )
-            self.card_frame.configure(highlightbackground=COL_GREEN)
+            target_dot_fg = COL_GREEN
+            target_title = s["protected_title"]
+            target_subtitle = s["protected_desc"].format(count=blocked_count)
+            target_btn_text = s["btn_unblock"]
+            target_btn_bg = "#2D6A4F"
+            target_btn_fg = "#A6E3A1"
+            target_btn_activebg = "#1B4332"
+            target_hl = COL_GREEN
         else:
-            # Estado expuesto (bloqueo inactivo) / Exposed state (inactive blocking)
-            self.status_dot.configure(fg=COL_RED)
-            self.status_title.configure(text=s["exposed_title"])
-            self.status_subtitle.configure(text=s["exposed_desc"])
-            self.toggle_btn.configure(
-                text=s["btn_block"],
-                bg="#6B1E2B", fg="#F38BA8",
-                activebackground="#4C1220",
+            target_dot_fg = COL_RED
+            target_title = s["exposed_title"]
+            target_subtitle = s["exposed_desc"]
+            target_btn_text = s["btn_block"]
+            target_btn_bg = "#6B1E2B"
+            target_btn_fg = "#F38BA8"
+            target_btn_activebg = "#4C1220"
+            target_hl = COL_RED
+
+        # Configure texts
+        self.status_title.configure(text=target_title)
+        self.status_subtitle.configure(text=target_subtitle)
+        self.toggle_btn.configure(text=target_btn_text, activebackground=target_btn_activebg)
+
+        # Decide whether to animate color changes
+        if self.last_visuals_blocked != self.is_blocked:
+            # We are transitioning states, animate!
+            self._anim_id += 1
+            
+            # Source colors are the opposite state
+            if self.is_blocked:
+                # Transitioning from EXPOSED to PROTECTED
+                src_hl = COL_RED
+                src_bg = "#6B1E2B"
+                src_fg = "#F38BA8"
+            else:
+                # Transitioning from PROTECTED to EXPOSED
+                src_hl = COL_GREEN
+                src_bg = "#2D6A4F"
+                src_fg = "#A6E3A1"
+
+            self._animation_tick(
+                self._anim_id,
+                src_hl, target_hl,
+                src_bg, target_bg,
+                src_fg, target_fg,
+                15, 0
             )
-            self.card_frame.configure(highlightbackground=COL_RED)
+            self.last_visuals_blocked = self.is_blocked
+        else:
+            # No transition (startup, profile change within same state, or language change)
+            self._anim_id += 1 # Cancel any active animation
+            self.card_frame.configure(highlightbackground=target_hl)
+            self.status_dot.configure(fg=target_dot_fg)
+            self.toggle_btn.configure(bg=target_btn_bg, fg=target_btn_fg)
 
         # Update system tray icon if available
         if CURRENT_OS == "Windows" and hasattr(self, 'tray_icon'):
