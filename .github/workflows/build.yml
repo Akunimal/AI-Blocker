@@ -1,0 +1,60 @@
+name: Build and Release Binaries
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Permite ejecutar la compilación manualmente desde la pestaña "Actions"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build with PyInstaller (Windows)
+        if: runner.os == 'Windows'
+        run: pyinstaller --onefile --windowed --uac-admin --name "AI-Blocker" --clean ai_blocker.py
+
+      - name: Build with PyInstaller (Unix)
+        if: runner.os != 'Windows'
+        run: pyinstaller --onefile --windowed --name "AI-Blocker" --clean ai_blocker.py
+
+      - name: Rename and zip assets
+        shell: bash
+        run: |
+          cd dist
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            mv "AI-Blocker.exe" "AI-Blocker-Windows.exe"
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            mv "AI-Blocker" "AI-Blocker-macOS"
+            zip -r AI-Blocker-macOS.app.zip AI-Blocker.app
+          else
+            mv "AI-Blocker" "AI-Blocker-Linux"
+          fi
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: dist/AI-Blocker-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
