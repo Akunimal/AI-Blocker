@@ -3,6 +3,9 @@ name: Build and Release Binaries
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - main
   workflow_dispatch: # Permite ejecutar la compilación manualmente desde la pestaña "Actions"
     inputs:
       tag_name:
