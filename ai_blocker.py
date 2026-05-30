@@ -453,11 +453,14 @@ def detect_running_ai_editors():
     return running
 
 
-def activate_block(lang):
+def activate_block(lang, categories_to_block=None):
     """
-    Aplica el bloqueo de red de IAs.
-    Applies the AI network block.
+    Aplica el bloqueo de red de IAs para las categorías seleccionadas.
+    Applies the AI network block for selected categories.
     """
+    if categories_to_block is None:
+        categories_to_block = list(BLOCKLIST.keys())
+
     # 1. Cierra procesos activos / 1. Close active processes
     closed_list = force_close_processes()
     s = STRINGS[lang]
@@ -469,28 +472,30 @@ def activate_block(lang):
             with open(HOSTS_PATH, "r", encoding="utf-8") as f:
                 existing_lines = f.readlines()
 
-        existing_domains = set()
-        for line in existing_lines:
-            parts = line.strip().split()
-            if len(parts) >= 2:
-                existing_domains.add(parts[1])
+        # Remove all existing AI-Block lines first so we rebuild cleanly
+        cleaned_lines = [l for l in existing_lines if COMMENT_TAG not in l]
+
+        if cleaned_lines and not cleaned_lines[-1].endswith("\n"):
+            cleaned_lines[-1] += "\n"
 
         new_entries = []
         added_count = 0
 
-        for category, domains in BLOCKLIST.items():
-            for domain in domains:
-                entry = f"127.0.0.1 {domain} {COMMENT_TAG}\n"
-                if domain not in existing_domains:
-                    new_entries.append(entry)
-                    existing_domains.add(domain)
-                    added_count += 1
+        # Build list of unique domains to block based on selected categories
+        domains_to_block = []
+        for cat in categories_to_block:
+            if cat in BLOCKLIST:
+                for domain in BLOCKLIST[cat]:
+                    if domain not in domains_to_block:
+                        domains_to_block.append(domain)
 
-        if new_entries:
-            if existing_lines and not existing_lines[-1].endswith("\n"):
-                existing_lines[-1] += "\n"
-            with open(HOSTS_PATH, "w", encoding="utf-8") as f:
-                f.writelines(existing_lines + new_entries)
+        for domain in domains_to_block:
+            entry = f"127.0.0.1 {domain} {COMMENT_TAG}\n"
+            new_entries.append(entry)
+            added_count += 1
+
+        with open(HOSTS_PATH, "w", encoding="utf-8") as f:
+            f.writelines(cleaned_lines + new_entries)
 
         # 3. Limpia caché DNS / 3. Flush DNS cache
         flush_dns()
@@ -575,6 +580,12 @@ class AIBlockerApp:
         self.is_blocked, _ = get_hosts_status()
         self.is_busy = False
         self._scan_after_id = None
+
+        # Estado de categorías y variables / Category state and variables
+        self.category_vars = {}
+        self.category_checkboxes = {}
+        for cat in BLOCKLIST:
+            self.category_vars[cat] = tk.BooleanVar(value=True)
 
         # Construir la interfaz / Build the interface
         self._build_header()
@@ -749,22 +760,34 @@ class AIBlockerApp:
             "Microsoft Copilot": "🟦", "DeepSeek": "🔮", "Otros": "📦",
         }
 
-        # Guardar referencias de los labels de categorías para poder traducirlos dinámicamente
-        # Store references of category labels to translate them dynamically
-        self.category_labels = {}
+        # Guardar referencias de los checkboxes de categorías para poder traducirlos dinámicamente
+        self.category_checkboxes = {}
 
         for cat, domains in BLOCKLIST.items():
             row = tk.Frame(self.list_frame, bg=COL_SURFACE0)
             row.pack(fill=tk.X, pady=1)
 
             icon = self.category_icons.get(cat, "•")
-            cat_label = tk.Label(
-                row, text=f"  {icon}  {cat}",
-                font=(UI_FONT, 9), bg=COL_SURFACE0,
-                fg=COL_TEXT, anchor="w",
+            chk = tk.Checkbutton(
+                row,
+                text=f"  {icon}  {cat}",
+                variable=self.category_vars[cat],
+                onvalue=True,
+                offvalue=False,
+                command=self._on_category_toggled,
+                font=(UI_FONT, 9),
+                bg=COL_SURFACE0,
+                fg=COL_TEXT,
+                selectcolor=COL_SURFACE0,
+                activebackground=COL_SURFACE0,
+                activeforeground=COL_TEXT,
+                bd=0,
+                relief="flat",
+                highlightthickness=0,
+                anchor="w"
             )
-            cat_label.pack(side=tk.LEFT)
-            self.category_labels[cat] = cat_label
+            chk.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            self.category_checkboxes[cat] = chk
 
             tk.Label(
                 row, text=f"{len(domains)}",
@@ -833,10 +856,10 @@ class AIBlockerApp:
 
         # 4. Traducir los nombres de categorías en el listado / 4. Translate category names in the list
         translations = CATEGORY_TRANSLATIONS.get(self.current_lang, CATEGORY_TRANSLATIONS["en"])
-        for cat, label in self.category_labels.items():
+        for cat, chk in self.category_checkboxes.items():
             translated_name = translations.get(cat, cat)
             icon = self.category_icons.get(cat, "•")
-            label.configure(text=f"  {icon}  {translated_name}")
+            chk.configure(text=f"  {icon}  {translated_name}")
 
         # 5. Estado y Botón (usando la lógica de visuals existente) / 5. Status and Button (using existing visuals logic)
         self._update_visuals()
@@ -844,6 +867,45 @@ class AIBlockerApp:
     # -----------------------------------------------------------------
     # Lógica de Interacción y Estados / Interaction and States Logic
     # -----------------------------------------------------------------
+    def _get_active_categories(self):
+        return [cat for cat, var in self.category_vars.items() if var.get()]
+
+    def _on_category_toggled(self):
+        if self.is_blocked:
+            self._handle_reapply_block()
+        else:
+            self._update_visuals()
+
+    def _handle_reapply_block(self):
+        if self.is_busy:
+            return
+        self.is_busy = True
+        s = STRINGS[self.current_lang]
+        self.toggle_btn.configure(state="disabled", text=s["busy_text"])
+
+        def task():
+            active_cats = self._get_active_categories()
+            if not active_cats:
+                ok, msg = deactivate_block(self.current_lang)
+            else:
+                ok, msg = activate_block(self.current_lang, active_cats)
+            
+            if ok:
+                self.is_blocked = bool(active_cats)
+            self.root.after(0, lambda: self._on_reapply_done(ok, msg))
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def _on_reapply_done(self, ok, msg):
+        self.is_busy = False
+        self.toggle_btn.configure(state="normal")
+        self._update_visuals()
+        self._refresh_editors_label()
+        if not ok:
+            s = STRINGS[self.current_lang]
+            title = s["hosts_write_error_title"] if "hosts" in msg else s["unexpected_error_title"]
+            messagebox.showerror(title, msg)
+
     def _handle_toggle(self):
         """
         Ejecuta la acción de bloqueo/desbloqueo en un hilo independiente.
@@ -862,7 +924,13 @@ class AIBlockerApp:
                 if ok:
                     self.is_blocked = False
             else:
-                ok, msg = activate_block(self.current_lang)
+                active_cats = self._get_active_categories()
+                # If nothing is selected, check them all to avoid empty block
+                if not active_cats:
+                    for cat in self.category_vars:
+                        self.category_vars[cat].set(True)
+                    active_cats = list(self.category_vars.keys())
+                ok, msg = activate_block(self.current_lang, active_cats)
                 if ok:
                     self.is_blocked = True
 
