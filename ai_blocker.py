@@ -1211,7 +1211,8 @@ class AIBlockerApp:
             footer, text="",
             font=(UI_FONT, 8),
             bg=COL_BASE, fg=COL_YELLOW,
-            self.editors_label.pack(side=tk.RIGHT)
+        )
+        self.editors_label.pack(side=tk.RIGHT)
         self._refresh_editors_label()
 
     # -----------------------------------------------------------------
