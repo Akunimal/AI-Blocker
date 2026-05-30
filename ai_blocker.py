@@ -42,6 +42,9 @@ APP_VERSION = "1.2.0"
 # =====================================================================
 # CONFIGURACIÓN LOCAL / LOCAL CONFIGURATION
 # =====================================================================
+SENSITIVE_CONFIG_KEYS = {"openai_key"}
+
+
 def get_config_path():
     if CURRENT_OS == "Windows":
         base_dir = os.environ.get("APPDATA", os.path.expanduser("~"))
@@ -59,7 +62,10 @@ def load_config():
     if os.path.exists(path):
         try:
             with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+            for key in SENSITIVE_CONFIG_KEYS:
+                data.pop(key, None)
+            return data
         except Exception:
             pass
     return {}
@@ -67,8 +73,11 @@ def load_config():
 def save_config(config_data):
     path = get_config_path()
     try:
+        safe_config = dict(config_data)
+        for key in SENSITIVE_CONFIG_KEYS:
+            safe_config.pop(key, None)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(config_data, f, indent=4, ensure_ascii=False)
+            json.dump(safe_config, f, indent=4, ensure_ascii=False)
     except Exception:
         pass
 
@@ -1256,8 +1265,8 @@ class AIBlockerApp:
         
         key_frame = tk.Frame(audit_frame, bg=COL_SURFACE0)
         key_frame.pack(fill=tk.X, padx=16, pady=(10, 0))
-        tk.Label(key_frame, text="OpenAI API Key:", bg=COL_SURFACE0, fg=COL_TEXT).pack(side=tk.LEFT)
-        self.openai_key_var = tk.StringVar(value=self.config.get("openai_key", ""))
+        tk.Label(key_frame, text="OpenAI API Key (not saved):", bg=COL_SURFACE0, fg=COL_TEXT).pack(side=tk.LEFT)
+        self.openai_key_var = tk.StringVar(value=os.environ.get("OPENAI_API_KEY", ""))
         tk.Entry(key_frame, textvariable=self.openai_key_var, show="*", bg=COL_BASE, fg=COL_TEXT, insertbackground=COL_TEXT, relief="flat").pack(side=tk.LEFT, fill=tk.X, expand=True, padx=8)
         
         self.audit_btn = tk.Button(audit_frame, text="Run Security Audit", font=(UI_FONT, 10, "bold"), bg=COL_BLUE, fg="#000000", bd=0, command=self._run_audit)
@@ -1296,7 +1305,6 @@ class AIBlockerApp:
             messagebox.showerror("Error", "Please enter an OpenAI API Key.")
             return
             
-        self.config["openai_key"] = api_key
         self._save_current_config()
         
         self.audit_btn.configure(state="disabled", text="Auditing...")

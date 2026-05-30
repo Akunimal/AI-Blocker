@@ -45,7 +45,7 @@ Los asistentes de programación de IA tienen acceso profundo y sin restricciones
 | Característica | Descripción |
 |---|---|
 | 🔀 **Router de IA Local** | Intercepta el tráfico de Copilot/Cursor y lo envía a tu propio LLM local (Ollama/LM Studio). |
-| 🛡️ **Auditor DevSec de IA** | Análisis en vivo de procesos en ejecución para detectar riesgos de fuga de datos, impulsado por OpenAI. |
+| 🛡️ **Auditor DevSec de IA** | Análisis en vivo de procesos en ejecución para detectar riesgos de fuga de datos, impulsado por OpenAI. Las claves API se leen en tiempo de ejecución y no se guardan en disco. |
 | 🔒 **Interruptor de apagado** | Bloquea o desbloquea todos los servicios de IA al instante vía el archivo `hosts`. |
 | 🌍 **Soporte multilingüe** | 10 idiomas soportados con detección automática del sistema. |
 | 🎨 **Interfaz oscura premium** | Tema moderno Catppuccin Mocha con estados codificados por colores y pestañas. |

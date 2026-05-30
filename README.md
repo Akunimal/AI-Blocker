@@ -45,7 +45,7 @@ AI coding assistants have deep, unrestricted access to your files, your clipboar
 | Feature | Description |
 |---|---|
 | 🔀 **Local API Router** | Intercept Copilot/Cursor traffic and route it to your own Local LLM (Ollama/LM Studio). |
-| 🛡️ **AI DevSec Auditor** | Live analysis of your running processes to detect data leak risks, powered by OpenAI. |
+| 🛡️ **AI DevSec Auditor** | Live analysis of your running processes to detect data leak risks, powered by OpenAI. API keys are read at runtime and are not saved to disk. |
 | 🔒 **One-click Kill Switch** | Block or unblock all AI services instantly via the system `hosts` file. |
 | 🌍 **Multilingual support** | 10 languages supported with automatic system detection. |
 | 🎨 **Premium dark UI** | Modern Catppuccin Mocha theme with color-coded status and tabs. |
@@ -243,7 +243,7 @@ Trust is everything when a tool touches your system files. AI DevSec Gateway is:
 
 - **Auditable** — one clean Python file under 1200 lines (including all 10 language dictionaries)
 - **Commented** — every function contains detailed explanations in both English and Spanish
-- **Transparent** — no obfuscation, no compiled binary blobs in source, no telemetry, and zero network calls
+- **Transparent** — no obfuscation, no compiled binary blobs in source, and no telemetry. Network access is limited to user-visible features such as the router, auditor, and connectivity checks.
 - **Deterministic** — it either edits the hosts file or it doesn't. Nothing else.
 
 You own your machine. You set the rules.
