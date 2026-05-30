@@ -4,6 +4,16 @@ on:
   release:
     types: [published]
   workflow_dispatch: # Permite ejecutar la compilación manualmente desde la pestaña "Actions"
+    inputs:
+      tag_name:
+        description: 'Tag name (e.g. v1.1.4)'
+        required: false
+        default: 'v1.1.4'
+      release_name:
+        description: 'Release name'
+        required: false
+        default: 'v1.1.4 - Category Blocking, Profiles & Tray'
+
 
 permissions:
   contents: write
@@ -54,8 +64,8 @@ jobs:
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
-          name: ${{ github.event.release.name }}
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag_name || 'v1.1.4' }}
+          name: ${{ github.event.release.name || github.event.inputs.release_name || 'v1.1.4 - Category Blocking, Profiles & Tray' }}
           body: |
             ### Added
             - Implemented real-time polling (every 3 seconds) for the active AI editors warning in the footer.
